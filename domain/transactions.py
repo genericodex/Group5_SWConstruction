@@ -21,6 +21,15 @@ class Transaction:
             raise ValueError("Transaction amount must be positive")
         self.transaction_id = f"txn_{self.timestamp.timestamp()}"
 
+    def get_transaction_id(self) -> str:
+        return self.transaction_id
+
+    def get_amount(self) -> float:
+        return self.amount
+
+    def get_transaction_type(self) -> TransactionType:
+        return self.transaction_type
+
     def __repr__(self):
         return (f"Transaction(transaction_id={self.transaction_id}, "
                 f"type={self.transaction_type.name}, "
