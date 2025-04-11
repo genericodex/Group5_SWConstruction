@@ -22,6 +22,7 @@ class AccountRepository(ABC):
 
     @abstractmethod
     def delete(self, account_id: str) -> None:
+
         """Delete an account by its unique ID."""
         pass
 
@@ -52,3 +53,4 @@ class InMemoryAccountRepository(AccountRepository):
             del self._accounts[account_id]
         else:
             raise ValueError(f"Account with ID '{account_id}' does not exist.")
+

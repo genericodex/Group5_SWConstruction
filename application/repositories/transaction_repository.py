@@ -46,3 +46,4 @@ class InMemoryTransactionRepository(TransactionRepository):
 
     def get_all(self) -> List[Transaction]:
         return list(self._transactions.values())
+
