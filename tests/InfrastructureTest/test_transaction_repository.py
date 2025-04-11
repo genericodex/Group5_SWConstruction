@@ -36,7 +36,7 @@ class TestTransactionRepository(unittest.TestCase):
         )
 
         # Act
-        transaction_id = self.transaction_repo.save_transaction(transaction)
+        transaction_id = self.transaction_repo.save(transaction)  # Changed to save
 
         # Assert
         self.assertEqual(transaction_id, transaction.get_transaction_id())
@@ -64,11 +64,11 @@ class TestTransactionRepository(unittest.TestCase):
             account_id="acc2",
             timestamp=datetime.now()
         )
-        self.transaction_repo.save_transaction(transaction1)
-        self.transaction_repo.save_transaction(transaction2)
+        self.transaction_repo.save(transaction1)  # Changed to save
+        self.transaction_repo.save(transaction2)  # Changed to save
 
         # Act
-        transactions = self.transaction_repo.get_transactions_for_account("acc2")
+        transactions = self.transaction_repo.get_by_account_id("acc2")  # Changed to get_by_account_id
 
         # Assert
         self.assertEqual(len(transactions), 2)
@@ -85,10 +85,11 @@ class TestTransactionRepository(unittest.TestCase):
         self.account_repo.create_account(account)
 
         # Act
-        transactions = self.transaction_repo.get_transactions_for_account("acc3")
+        transactions = self.transaction_repo.get_by_account_id("acc3")  # Changed to get_by_account_id
 
         # Assert
         self.assertEqual(len(transactions), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
