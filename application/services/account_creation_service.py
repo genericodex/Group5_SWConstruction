@@ -1,5 +1,5 @@
 import uuid
-from Group5_SWConstruction.Domain.account import CheckingAccount, SavingsAccount
+from domain.accounts import CheckingAccount, SavingsAccount
 
 class AccountCreationService:
     def create_account(self, account_type: str, initial_deposit: float = 0.0):
