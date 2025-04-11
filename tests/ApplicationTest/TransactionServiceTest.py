@@ -1,119 +1,108 @@
 import unittest
 from unittest.mock import Mock, patch
-
-from application.repositories.account_repository import IAccountRepository
-from application.repositories.transaction_repository import ITransactionRepository
 from application.services.transaction_service import TransactionService
 from domain.accounts import CheckingAccount
-from domain.transactions import Transaction, TransactionType
-
+from domain.transactions import Transaction, TransactionType  # Import the enum
+from decimal import Decimal
+import uuid
 
 class TestTransactionService(unittest.TestCase):
-
     def setUp(self):
-        # Create mock repositories
-        self.mock_transaction_repo = Mock(spec=ITransactionRepository)
-        self.mock_account_repo = Mock(spec=IAccountRepository)
-
-        # Create service with mock repositories
+        # Initialize mocks for repositories
+        self.account_repository = Mock()
+        self.transaction_repository = Mock()
         self.transaction_service = TransactionService(
-            transaction_repository=self.mock_transaction_repo,
-            account_repository=self.mock_account_repo
+            self.transaction_repository,
+            self.account_repository
         )
+        self.account_id = str(uuid.uuid4())
+        self.amount = 100.0
 
-        # Create a test account
-        self.test_account = CheckingAccount("test-account-123", initial_balance=1000.0)
-
-        # Configure mock account repository to return our test account
-        self.mock_account_repo.find_by_id.return_value = self.test_account
-
-    def tearDown(self):
-        # Clean up any resources
-        pass
-
-    def test_deposit(self):
+    def test_deposit_successful(self):
         # Arrange
-        account_id = "test-account-123"
-        deposit_amount = 500.0
-        initial_balance = self.test_account.get_balance()
+        account = CheckingAccount(self.account_id, 0.0)
+        self.account_repository.find_by_id.return_value = account
+        expected_balance = Decimal(str(self.amount))
 
         # Act
-        transaction = self.transaction_service.deposit(account_id, deposit_amount)
+        transaction = self.transaction_service.deposit(self.account_id, self.amount)
 
         # Assert
-        # Verify the account repository was called to get the account
-        self.mock_account_repo.find_by_id.assert_called_once_with(account_id)
+        self.account_repository.find_by_id.assert_called_once_with(self.account_id)
+        self.transaction_repository.save.assert_called_once()
+        self.account_repository.save.assert_called_once_with(account)
+        self.assertEqual(account.balance, expected_balance)
+        self.assertIsInstance(transaction, Transaction)
+        self.assertEqual(transaction.amount, Decimal(str(self.amount)))
+        # Fix: Compare with enum value instead of string
+        self.assertEqual(transaction.transaction_type, TransactionType.DEPOSIT)
 
-        # Verify the transaction was saved
-        self.mock_transaction_repo.save.assert_called_once()
-        saved_transaction = self.mock_transaction_repo.save.call_args[0][0]
-        self.assertIsInstance(saved_transaction, Transaction)
-        self.assertEqual(saved_transaction.get_transaction_type(), TransactionType.DEPOSIT)
-        self.assertEqual(saved_transaction.get_amount(), deposit_amount)
-
-        # Verify the updated account was saved
-        self.mock_account_repo.save.assert_called_once_with(self.test_account)
-
-        # Verify the account balance was updated
-        self.assertEqual(self.test_account.get_balance(), initial_balance + deposit_amount)
-
-    def test_withdraw(self):
+    def test_deposit_account_not_found(self):
         # Arrange
-        account_id = "test-account-123"
-        withdrawal_amount = 300.0
-        initial_balance = self.test_account.get_balance()
+        self.account_repository.find_by_id.return_value = None
+
+        # Act / Assert
+        with self.assertRaises(ValueError) as context:
+            self.transaction_service.deposit(self.account_id, self.amount)
+        self.assertEqual(
+            str(context.exception),
+            f"Account with ID {self.account_id} not found"
+        )
+        self.account_repository.find_by_id.assert_called_once_with(self.account_id)
+        self.transaction_repository.save.assert_not_called()
+        self.account_repository.save.assert_not_called()
+
+    def test_withdraw_successful(self):
+        # Arrange
+        initial_balance = 200.0
+        account = CheckingAccount(self.account_id, initial_balance)
+        self.account_repository.find_by_id.return_value = account
+        expected_balance = Decimal(str(initial_balance - self.amount))
 
         # Act
-        transaction = self.transaction_service.withdraw(account_id, withdrawal_amount)
+        transaction = self.transaction_service.withdraw(self.account_id, self.amount)
 
         # Assert
-        # Verify the account repository was called to get the account
-        self.mock_account_repo.find_by_id.assert_called_once_with(account_id)
-
-        # Verify the transaction was saved
-        self.mock_transaction_repo.save.assert_called_once()
-        saved_transaction = self.mock_transaction_repo.save.call_args[0][0]
-        self.assertIsInstance(saved_transaction, Transaction)
-        self.assertEqual(saved_transaction.get_transaction_type(), TransactionType.WITHDRAW)
-        self.assertEqual(saved_transaction.get_amount(), withdrawal_amount)
-
-        # Verify the updated account was saved
-        self.mock_account_repo.save.assert_called_once_with(self.test_account)
-
-        # Verify the account balance was updated
-        self.assertEqual(self.test_account.get_balance(), initial_balance - withdrawal_amount)
+        self.account_repository.find_by_id.assert_called_once_with(self.account_id)
+        self.transaction_repository.save.assert_called_once()
+        self.account_repository.save.assert_called_once_with(account)
+        self.assertEqual(account.balance, expected_balance)
+        self.assertIsInstance(transaction, Transaction)
+        self.assertEqual(transaction.amount, Decimal(str(self.amount)))
+        # Fix: Compare with enum value instead of string
+        self.assertEqual(transaction.transaction_type, TransactionType.WITHDRAW)
 
     def test_withdraw_insufficient_funds(self):
         # Arrange
-        account_id = "test-account-123"
-        excessive_amount = 2000.0  # More than the balance of 1000.0
+        initial_balance = 50.0
+        account = CheckingAccount(self.account_id, initial_balance)
+        self.account_repository.find_by_id.return_value = account
 
-        # Act & Assert
+        # Act / Assert
         with self.assertRaises(ValueError) as context:
-            self.transaction_service.withdraw(account_id, excessive_amount)
+            self.transaction_service.withdraw(self.account_id, self.amount)
+        self.assertEqual(
+            str(context.exception),
+            "Withdrawal amount exceeds available balance"
+        )
+        self.account_repository.find_by_id.assert_called_once_with(self.account_id)
+        self.transaction_repository.save.assert_not_called()
+        self.account_repository.save.assert_not_called()
 
-        self.assertIn("Withdrawal amount exceeds available balance", str(context.exception))
-
-        # Verify the repositories were not called to save anything
-        self.mock_transaction_repo.save.assert_not_called()
-        self.mock_account_repo.save.assert_not_called()
-
-    def test_account_not_found(self):
+    def test_withdraw_account_not_found(self):
         # Arrange
-        # Configure mock to return None (account not found)
-        self.mock_account_repo.find_by_id.return_value = None
-        non_existent_id = "non-existent-account"
+        self.account_repository.find_by_id.return_value = None
 
-        # Act & Assert
+        # Act / Assert
         with self.assertRaises(ValueError) as context:
-            self.transaction_service.deposit(non_existent_id, 100.0)
-
-        self.assertIn(f"Account with ID {non_existent_id} not found", str(context.exception))
-
-        # Verify repositories were not called to save anything
-        self.mock_transaction_repo.save.assert_not_called()
-        self.mock_account_repo.save.assert_not_called()
-
+            self.transaction_service.withdraw(self.account_id, self.amount)
+        self.assertEqual(
+            str(context.exception),
+            f"Account with ID {self.account_id} not found"
+        )
+        self.account_repository.find_by_id.assert_called_once_with(self.account_id)
+        self.transaction_repository.save.assert_not_called()
+        self.account_repository.save.assert_not_called()
 
 if __name__ == '__main__':
     unittest.main()
