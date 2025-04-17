@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import List, Callable
 from domain.transactions import Transaction, TransactionType
+from hashlib import sha256
 
 
 class AccountStatus(Enum):
@@ -20,13 +21,24 @@ class AccountType(Enum):
 class Account(ABC):
     account_id: str
     account_type: AccountType
+    username: str
+    _password_hash: str  # Stores the hashed version of the password
     _balance: float = 0.0
     status: AccountStatus = AccountStatus.ACTIVE
     creation_date: datetime = field(default_factory=datetime.now)
     _transactions: List[Transaction] = field(default_factory=list, init=False)
     _observers: List[Callable] = field(default_factory=list, init=False)
 
+
     @property
+    def hash_password(self, password: str) -> None:
+        """Hashes and sets the password for the account."""
+        self._password_hash = sha256(password.encode()).hexdigest()
+
+    def verify_password(self, password: str) -> bool:
+        """Verifies whether a given password matches the stored hashed password."""
+        return self._password_hash == sha256(password.encode()).hexdigest()
+
     def balance(self) -> float:
         return self._balance
 

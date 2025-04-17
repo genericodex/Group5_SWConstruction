@@ -1,8 +1,10 @@
 import unittest
 from datetime import datetime
 from sqlalchemy.orm import Session
+
+from domain.checking_account import CheckingAccount
 from domain.transactions import Transaction, TransactionType
-from domain.accounts import CheckingAccount
+
 from infrastructure.database.models import TransactionModel
 from infrastructure.repositories.transaction_repository import TransactionRepository
 from infrastructure.repositories.account_repository import AccountRepository
