@@ -1,27 +1,40 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum, auto
 from typing import List, Callable
-from domain.transactions import Transaction, TransactionType
+from domain.transactions import (
+    Transaction, 
+    DepositTransactionType, WithdrawTransactionType, TransferTransactionType
+)
 
+class AccountStatus(ABC):
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        pass
 
-class AccountStatus(Enum):
-    ACTIVE = auto()
-    CLOSED = auto()
+class ActiveStatus(AccountStatus):
+    @property
+    def name(self) -> str:
+        return "ACTIVE"
 
+class ClosedStatus(AccountStatus):
+    @property
+    def name(self) -> str:
+        return "CLOSED"
 
-class AccountType(Enum):
-    CHECKING = auto()
-    SAVINGS = auto()
-
+class AccountType(ABC):
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        pass
 
 @dataclass
 class Account(ABC):
     account_id: str
     account_type: AccountType
     _balance: float = 0.0
-    status: AccountStatus = AccountStatus.ACTIVE
+    status: AccountStatus = field(default_factory=ActiveStatus)
     creation_date: datetime = field(default_factory=datetime.now)
     _transactions: List[Transaction] = field(default_factory=list, init=False)
     _observers: List[Callable] = field(default_factory=list, init=False)
@@ -46,7 +59,7 @@ class Account(ABC):
 
         self.update_balance(amount)
         transaction = Transaction(
-            transaction_type=TransactionType.DEPOSIT,
+            transaction_type=DepositTransactionType(),
             amount=amount,
             account_id=self.account_id
         )
@@ -63,7 +76,7 @@ class Account(ABC):
 
         self.update_balance(-amount)
         transaction = Transaction(
-            transaction_type=TransactionType.WITHDRAW,
+            transaction_type=WithdrawTransactionType(),
             amount=amount,
             account_id=self.account_id
         )
@@ -82,7 +95,7 @@ class Account(ABC):
         destination_account.update_balance(amount)
         
         transaction = Transaction(
-            transaction_type=TransactionType.TRANSFER,
+            transaction_type=TransferTransactionType(),
             amount=amount,
             account_id=self.account_id,
             source_account_id=self.account_id,

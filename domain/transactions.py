@@ -1,13 +1,27 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum, auto
+from abc import ABC, abstractmethod
 
+class TransactionType(ABC):
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        pass
 
-class TransactionType(Enum):
-    DEPOSIT = auto()
-    WITHDRAW = auto()
-    TRANSFER = auto()
+class DepositTransactionType(TransactionType):
+    @property
+    def name(self) -> str:
+        return "DEPOSIT"
 
+class WithdrawTransactionType(TransactionType):
+    @property
+    def name(self) -> str:
+        return "WITHDRAW"
+
+class TransferTransactionType(TransactionType):
+    @property
+    def name(self) -> str:
+        return "TRANSFER"
 
 @dataclass
 class Transaction:
@@ -23,7 +37,7 @@ class Transaction:
         if self.amount <= 0:
             raise ValueError("Transaction amount must be positive")
         self.transaction_id = f"txn_{self.timestamp.timestamp()}"
-        if self.transaction_type == TransactionType.TRANSFER:
+        if isinstance(self.transaction_type, TransferTransactionType):
             if not (self.source_account_id and self.destination_account_id):
                 raise ValueError("Transfer requires source and destination accounts")
 
@@ -51,7 +65,7 @@ class Transaction:
             "account_id": self.account_id,
             "timestamp": self.timestamp.isoformat()
         }
-        if self.transaction_type == TransactionType.TRANSFER:
+        if isinstance(self.transaction_type, TransferTransactionType):
             data.update({
                 "source_account_id": self.source_account_id,
                 "destination_account_id": self.destination_account_id
