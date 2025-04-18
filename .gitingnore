@@ -1,0 +1,33 @@
+# Ignore everything in the .idea folder...
+.idea/*
+
+# ...except these useful files:
+!.idea/misc.xml
+!.idea/vcs.xml
+!.idea/inspectionProfiles
+
+# Ignore personal workspace settings
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/dataSources/
+.idea/httpRequests/
+.idea/sonarlint/
+.idea/.name
+
+# Ignore IDE-specific logs and metadata
+.idea/index
+.idea/deploymentTargetDropDown.xml
+.idea/gradle.xml
+.idea/modules.xml
+
+# Ignore IntelliJ project files
+*.iml
+
+# Ignore build outputs (if Java/Gradle/Maven project)
+out/
+build/
+target/
+
+# Mac OS system files
+.DS_Store
