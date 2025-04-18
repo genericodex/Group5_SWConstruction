@@ -43,7 +43,7 @@ The system follows a layered architecture with four distinct layers: Domain, App
   - Employs a logging decorator or service to log operations without modifying core logic.
 
 **UML Diagram**:  
-![ApplicationLayer.png](UML%20diagrams/week2/ApplicationLayer.png)
+![AplicationLayer.png](UML%20diagrams/week2/AplicationLayer.png)
 
 #### 2.1.3 Infrastructure Layer  
 - **Role**: Provides concrete implementations of persistence and external service interfaces defined by the Application Layer.  
