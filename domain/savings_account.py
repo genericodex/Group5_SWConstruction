@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from domain.accounts import Account, AccountType
 
+class SavingsAccountType(AccountType):
+    @property
+    def name(self) -> str:
+        return "SAVINGS"
 
 @dataclass
 class SavingsAccount(Account):
@@ -9,7 +13,7 @@ class SavingsAccount(Account):
     def __init__(self, account_id: str, initial_balance: float = 0.0):
         super().__init__(
             account_id=account_id,
-            account_type=AccountType.SAVINGS,
+            account_type=SavingsAccountType(),
             _balance=initial_balance
         )
 
