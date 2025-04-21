@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from api.v1.endpoints import accounts
+from presentation.api.v1.endpoints import accounts, notifications
+from presentation.api.dependencies import notification_service
 
 from domain.accounts import AccountType
 from infrastructure.Authentication.login import InMemoryAuthenticationService
@@ -15,7 +16,7 @@ auth_service = InMemoryAuthenticationService(notification_service)
 
 # Include the API routes
 app.include_router(accounts.router, prefix="/v1", tags=["accounts"])
-
+app.include_router(notifications.router, prefix="/v1", tags=["notifications"])
 
 @app.on_event("startup")
 async def startup_event():
@@ -66,7 +67,6 @@ async def startup_event():
     except ValueError as e:
         notification_service.notify(f"Login failed: {e}")
 
-
 @app.on_event("shutdown")
 async def shutdown_event():
     """
@@ -74,10 +74,11 @@ async def shutdown_event():
     """
     print("Shutting down the Banking System API...")
 
-
 if __name__ == "__main__":
     import uvicorn
-
+    print("Starting FastAPI server...")
+    print("Access the API at: http://localhost:8000")
+    print("Interactive API docs at: http://localhost:8000/docs")
     uvicorn.run(
         app,
         host="127.0.0.1",
