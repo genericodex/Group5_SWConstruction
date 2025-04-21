@@ -1,104 +1,120 @@
-import unittest
+from unittest import TestCase
+from domain.transactions import Transaction, DepositTransactionType, WithdrawTransactionType, TransferTransactionType
 from datetime import datetime
 
-from domain.transactions import Transaction, TransactionType
-
-
-class TestTransaction(unittest.TestCase):
-
-    def test_transaction_creation_deposit(self):
-        # Test successful deposit transaction creation
-        now = datetime(2025, 4, 10, 16, 0, 0)
+class TestTransaction(TestCase):
+    def test_deposit_transaction_initialization(self):
+        fixed_timestamp = datetime(2023, 1, 1)
         transaction = Transaction(
-            transaction_type=TransactionType.DEPOSIT,
-            amount=100.00,
+            transaction_type=DepositTransactionType(),
+            amount=100.0,
             account_id="acc123",
-            timestamp=now
+            timestamp=fixed_timestamp
         )
-        self.assertEqual(transaction.transaction_type, TransactionType.DEPOSIT)
-        self.assertEqual(transaction.amount, 100.00)
+        self.assertEqual(transaction.transaction_type.name, "DEPOSIT")
+        self.assertEqual(transaction.amount, 100.0)
         self.assertEqual(transaction.account_id, "acc123")
-        self.assertEqual(transaction.timestamp, now)
-        self.assertTrue(transaction.transaction_id.startswith("txn_"))
-        self.assertEqual(float(transaction.transaction_id[4:]), now.timestamp())
+        self.assertEqual(transaction.timestamp, fixed_timestamp)
+        self.assertEqual(transaction.transaction_id, f"txn_{fixed_timestamp.timestamp()}")
+        self.assertIsNone(transaction.source_account_id)
+        self.assertIsNone(transaction.destination_account_id)
 
-    def test_transaction_creation_withdraw(self):
-        # Test successful withdraw transaction creation
-        now = datetime(2025, 4, 10, 16, 0, 0)
+    def test_withdraw_transaction_initialization(self):
+        fixed_timestamp = datetime(2023, 1, 1)
         transaction = Transaction(
-            transaction_type=TransactionType.WITHDRAW,
-            amount=50.00,
+            transaction_type=WithdrawTransactionType(),
+            amount=200.0,
             account_id="acc456",
-            timestamp=now
+            timestamp=fixed_timestamp
         )
-        self.assertEqual(transaction.transaction_type, TransactionType.WITHDRAW)
-        self.assertEqual(transaction.amount, 50.00)
+        self.assertEqual(transaction.transaction_type.name, "WITHDRAW")
+        self.assertEqual(transaction.amount, 200.0)
         self.assertEqual(transaction.account_id, "acc456")
-        self.assertEqual(transaction.timestamp, now)
-        self.assertTrue(transaction.transaction_id.startswith("txn_"))
+        self.assertEqual(transaction.timestamp, fixed_timestamp)
 
-    def test_transaction_creation_invalid_amount(self):
-        # Test invalid amount cases
-        test_cases = [
-            (TransactionType.DEPOSIT, 0, "acc789"),
-            (TransactionType.WITHDRAW, -25.00, "acc101"),
-            (TransactionType.DEPOSIT, -1.00, "acc102")
-        ]
-
-        for trans_type, amount, acc_id in test_cases:
-            with self.subTest(trans_type=trans_type, amount=amount, acc_id=acc_id):
-                with self.assertRaisesRegex(ValueError, "Transaction amount must be positive"):
-                    Transaction(
-                        transaction_type=trans_type,
-                        amount=amount,
-                        account_id=acc_id
-                    )
+    def test_transfer_transaction_initialization(self):
+        fixed_timestamp = datetime(2023, 1, 1)
+        transaction = Transaction(
+            transaction_type=TransferTransactionType(),
+            amount=50.0,
+            account_id="acc123",
+            source_account_id="acc123",
+            destination_account_id="acc456",
+            timestamp=fixed_timestamp
+        )
+        self.assertEqual(transaction.transaction_type.name, "TRANSFER")
+        self.assertEqual(transaction.amount, 50.0)
+        self.assertEqual(transaction.account_id, "acc123")
+        self.assertEqual(transaction.source_account_id, "acc123")
+        self.assertEqual(transaction.destination_account_id, "acc456")
 
     def test_get_methods(self):
-        # Test getter methods
-        now = datetime(2025, 4, 10, 16, 0, 0)
+        fixed_timestamp = datetime(2023, 1, 1)
         transaction = Transaction(
-            transaction_type=TransactionType.DEPOSIT,
-            amount=75.50,
-            account_id="acc112",
-            timestamp=now
+            transaction_type=WithdrawTransactionType(),
+            amount=150.0,
+            account_id="acc789",
+            timestamp=fixed_timestamp
         )
-        self.assertEqual(transaction.get_transaction_id(), transaction.transaction_id)
-        self.assertEqual(transaction.get_amount(), 75.50)
-        self.assertEqual(transaction.get_transaction_type(), TransactionType.DEPOSIT)
+        self.assertEqual(transaction.get_transaction_id(), f"txn_{fixed_timestamp.timestamp()}")
+        self.assertEqual(transaction.get_amount(), 150.0)
+        self.assertEqual(transaction.get_transaction_type().name, "WITHDRAW")
 
-    def test_transaction_repr(self):
-        # Test string representation
-        now = datetime(2025, 4, 10, 16, 0, 0)
+    def test_to_dict_deposit(self):
+        fixed_timestamp = datetime(2023, 1, 1)
         transaction = Transaction(
-            transaction_type=TransactionType.DEPOSIT,
-            amount=75.50,
-            account_id="acc112",
-            timestamp=now
+            transaction_type=DepositTransactionType(),
+            amount=100.0,
+            account_id="acc123",
+            timestamp=fixed_timestamp
         )
-        expected_repr = (f"Transaction(transaction_id=txn_{now.timestamp()}, "
-                         f"type=DEPOSIT, amount=75.5, account_id=acc112, "
-                         f"timestamp={now})")
-        self.assertEqual(repr(transaction), expected_repr)
-
-    def test_transaction_to_dict(self):
-        # Test dictionary conversion
-        now = datetime(2025, 4, 10, 16, 0, 0)
-        transaction = Transaction(
-            transaction_type=TransactionType.WITHDRAW,
-            amount=30.00,
-            account_id="acc131",
-            timestamp=now
-        )
-        expected_dict = {
-            "transaction_id": f"txn_{now.timestamp()}",
-            "type": "WITHDRAW",
-            "amount": 30.00,
-            "account_id": "acc131",
-            "timestamp": now.isoformat()
+        expected = {
+            "transaction_id": f"txn_{fixed_timestamp.timestamp()}",
+            "type": "DEPOSIT",
+            "amount": 100.0,
+            "account_id": "acc123",
+            "timestamp": fixed_timestamp.isoformat()
         }
-        self.assertEqual(transaction.to_dict(), expected_dict)
+        self.assertEqual(transaction.to_dict(), expected)
 
+    def test_to_dict_transfer(self):
+        fixed_timestamp = datetime(2023, 1, 1)
+        transaction = Transaction(
+            transaction_type=TransferTransactionType(),
+            amount=50.0,
+            account_id="acc123",
+            source_account_id="acc123",
+            destination_account_id="acc456",
+            timestamp=fixed_timestamp
+        )
+        expected = {
+            "transaction_id": f"txn_{fixed_timestamp.timestamp()}",
+            "type": "TRANSFER",
+            "amount": 50.0,
+            "account_id": "acc123",
+            "source_account_id": "acc123",
+            "destination_account_id": "acc456",
+            "timestamp": fixed_timestamp.isoformat()
+        }
+        self.assertEqual(transaction.to_dict(), expected)
 
+    def test_transaction_amount_positive(self):
+        with self.assertRaises(ValueError):
+            Transaction(
+                transaction_type=DepositTransactionType(),
+                amount=-10.0,
+                account_id="acc123",
+                timestamp=datetime(2023, 1, 1)
+            )
+
+    def test_transfer_requires_source_and_destination(self):
+        with self.assertRaises(ValueError):
+            Transaction(
+                transaction_type=TransferTransactionType(),
+                amount=50.0,
+                account_id="acc123",
+                timestamp=datetime(2023, 1, 1)
+            )
 if __name__ == '__main__':
+    import unittest
     unittest.main()

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from abc import ABC, abstractmethod
 
+
 class TransactionType(ABC):
     @property
     @abstractmethod
@@ -23,39 +24,29 @@ class TransferTransactionType(TransactionType):
     def name(self) -> str:
         return "TRANSFER"
 
+
+
 @dataclass
 class Transaction:
     transaction_type: TransactionType
     amount: float
     account_id: str
-    timestamp: datetime = field(default_factory=datetime.now)
-    transaction_id: str = field(init=False)
+    timestamp: datetime = None  # Default to None instead of datetime.now()
+    transaction_id: str = field(init=False)  # Generated after initialization
     source_account_id: str = None
     destination_account_id: str = None
 
     def __post_init__(self):
+        # Set timestamp to current time only if not provided
+        if self.timestamp is None:
+            self.timestamp = datetime.now()
         if self.amount <= 0:
             raise ValueError("Transaction amount must be positive")
+        # Generate transaction_id based on timestamp
         self.transaction_id = f"txn_{self.timestamp.timestamp()}"
         if isinstance(self.transaction_type, TransferTransactionType):
             if not (self.source_account_id and self.destination_account_id):
                 raise ValueError("Transfer requires source and destination accounts")
-
-    def get_transaction_id(self) -> str:
-        return self.transaction_id
-
-    def get_amount(self) -> float:
-        return self.amount
-
-    def get_transaction_type(self) -> TransactionType:
-        return self.transaction_type
-
-    def __repr__(self):
-        return (f"Transaction(transaction_id={self.transaction_id}, "
-                f"type={self.transaction_type.name}, "
-                f"amount={self.amount}, "
-                f"account_id={self.account_id}, "
-                f"timestamp={self.timestamp})")
 
     def to_dict(self):
         data = {
@@ -66,8 +57,15 @@ class Transaction:
             "timestamp": self.timestamp.isoformat()
         }
         if isinstance(self.transaction_type, TransferTransactionType):
-            data.update({
-                "source_account_id": self.source_account_id,
-                "destination_account_id": self.destination_account_id
-            })
+            data["source_account_id"] = self.source_account_id
+            data["destination_account_id"] = self.destination_account_id
         return data
+
+    def get_transaction_id(self):
+        return self.transaction_id
+
+    def get_amount(self):
+        return self.amount
+
+    def get_transaction_type(self):
+        return self.transaction_type

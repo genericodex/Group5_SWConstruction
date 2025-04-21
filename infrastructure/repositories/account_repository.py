@@ -1,7 +1,9 @@
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from application.repositories.account_repository import IAccountRepository
-from domain.accounts import Account, CheckingAccount, SavingsAccount, AccountType
+from domain.accounts import Account, AccountType
+from domain.checking_account import CheckingAccount
+from domain.savings_account import SavingsAccount
 from infrastructure.database.models import AccountModel
 
 class AccountRepository(IAccountRepository):

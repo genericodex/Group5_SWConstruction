@@ -44,7 +44,7 @@ class Account(ABC):
     _observers: List[Callable] = field(default_factory=list, init=False)
 
 
-    @property
+
     def hash_password(self, password: str) -> None:
         """Hashes and sets the password for the account."""
         self._password_hash = sha256(password.encode()).hexdigest()

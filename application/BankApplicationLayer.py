@@ -1,8 +1,14 @@
 from uuid import uuid4
 from typing import Protocol
-from Domain.BankingDomainLayer import Account, CheckingAccount, SavingsAccount, Transaction, TransactionType
+
 from datetime import datetime
 from typing import List, Optional
+
+from domain.accounts import Account
+from domain.checking_account import CheckingAccount
+from domain.savings_account import SavingsAccount
+from domain.transactions import Transaction, TransactionType
+
 
 class AccountRepository(Protocol):
     def create_account(self, account: Account) -> str:

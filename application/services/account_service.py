@@ -1,6 +1,7 @@
 import uuid
 from application.repositories.account_repository import IAccountRepository
-from domain.accounts import CheckingAccount, SavingsAccount
+from domain.checking_account import CheckingAccount
+from domain.savings_account import SavingsAccount
 
 
 class AccountCreationService:
