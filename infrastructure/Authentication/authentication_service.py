@@ -1,6 +1,5 @@
-# infrastructure/authentication_service_impl.py
 from application.services.notification_service import INotificationService
-from domain.accounts import Account  # assuming Account has full data
+from domain.accounts import Account
 from domain.accounts import AccountType
 from typing import Dict
 

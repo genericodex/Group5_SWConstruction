@@ -1,4 +1,3 @@
-# application/notification_service.py
 from abc import ABC, abstractmethod
 
 

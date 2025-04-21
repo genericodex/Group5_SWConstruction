@@ -5,8 +5,10 @@ from presentation.api.dependencies import notification_service
 from domain.accounts import AccountType
 from infrastructure.Authentication.login import InMemoryAuthenticationService
 from infrastructure.Notifications.notifications import NotificationService
+from api.routers import refine_layer
 
 app = FastAPI(title="Banking System API")
+app.include_router(refine_layer.router, prefix="/refine-layer")
 
 # Notification service initialization
 notification_service = NotificationService()
