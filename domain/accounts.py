@@ -50,7 +50,8 @@ class Account(ABC):
 
     def hash_password(self, password: str) -> None:
         """Hashes and sets the password for the account."""
-        self._password_hash = sha256(password.encode()).hexdigest()
+        if password is not None:
+            self._password_hash = sha256(password.encode()).hexdigest()
 
     def verify_password(self, password: str) -> bool:
         """Verifies whether a given password matches the stored hashed password."""
