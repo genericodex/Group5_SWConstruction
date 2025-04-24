@@ -8,14 +8,19 @@ from domain.transactions import Transaction, TransactionType
 
 class TestCheckingAccount(unittest.TestCase):
     def setUp(self):
-        self.account = CheckingAccount("C12345", 500.0)
+        self.account = CheckingAccount("C12345", "testuser", "password123", 500.0)
 
     def test_initialization(self):
         self.assertEqual(self.account.account_id, "C12345")
-        self.assertEqual(self.account.balance, 500.0)
+        self.assertEqual(self.account.username, "testuser")
+        self.assertEqual(self.account.get_balance(), 500.0)
         self.assertEqual(self.account.account_type, AccountType.CHECKING)
         self.assertEqual(self.account.status, AccountStatus.ACTIVE)
         self.assertIsInstance(self.account.creation_date, datetime)
+
+    def test_password_verification(self):
+        self.assertTrue(self.account.verify_password("password123"))
+        self.assertFalse(self.account.verify_password("wrongpassword"))
 
     def test_deposit(self):
         initial_balance = self.account.balance
@@ -63,11 +68,12 @@ class TestCheckingAccount(unittest.TestCase):
 
 class TestSavingsAccount(unittest.TestCase):
     def setUp(self):
-        self.account = SavingsAccount("S12345", 500.0)
+        self.account = SavingsAccount("S12345", "testuser", "password123", 500.0)
 
     def test_initialization(self):
         self.assertEqual(self.account.account_id, "S12345")
-        self.assertEqual(self.account.balance, 500.0)
+        self.assertEqual(self.account.username, "testuser")
+        self.assertEqual(self.account.get_balance(), 500.0)
         self.assertEqual(self.account.account_type, AccountType.SAVINGS)
         self.assertEqual(self.account.status, AccountStatus.ACTIVE)
         self.assertIsInstance(self.account.creation_date, datetime)
@@ -93,8 +99,8 @@ class TestSavingsAccount(unittest.TestCase):
 
 class TestBusinessRuleService(unittest.TestCase):
     def setUp(self):
-        self.checking = CheckingAccount("C12345", 500.0)
-        self.savings = SavingsAccount("S12345", 500.0)
+        self.checking = CheckingAccount("C12345", "testuser", "password123", 500.0)
+        self.savings = SavingsAccount("S12345", "testuser", "password123", 500.0)
         self.service = BusinessRuleService()
 
     def test_check_withdraw_allowed(self):
