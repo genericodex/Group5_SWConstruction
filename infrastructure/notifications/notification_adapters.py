@@ -7,12 +7,20 @@ from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
+# Decorator for logging method calls
+def log_method(func):
+    def wrapper(*args, **kwargs):
+        logger.info(f"Calling {func.__name__} with args: {args[1:]}, kwargs: {kwargs}")
+        result = func(*args, **kwargs)
+        logger.info(f"Completed {func.__name__}, result: {result}")
+        return result
+    return wrapper
 
 class NotificationAdapter(ABC):
     """Base abstract class for notification adapters"""
 
     @abstractmethod
-    def send(self, recipient: str, subject: str, content: str) -> bool:
+    def send(self, *args, **kwargs) -> bool:
         """Send notification to recipient"""
         pass
 
@@ -28,6 +36,7 @@ class EmailNotificationAdapter(NotificationAdapter):
         self.password = password
         self.from_email = from_email
 
+    @log_method
     def send(self, recipient: str, subject: str, content: str) -> bool:
         """Send email notification"""
         try:
@@ -56,12 +65,10 @@ class SMSNotificationAdapter(NotificationAdapter):
         self.api_url = api_url
         self.from_number = from_number
 
-    def send(self, recipient: str, subject: str, content: str) -> bool:
+    @log_method
+    def send(self, recipient: str, message: str) -> bool:
         """Send SMS notification"""
         try:
-            # Combine subject and content for SMS (typically SMS doesn't have subjects)
-            message = f"{subject}: {content}" if subject else content
-
             payload = {
                 "from": self.from_number,
                 "to": recipient,
