@@ -7,9 +7,6 @@ from domain.transactions import (
     DepositTransactionType, WithdrawTransactionType, TransferTransactionType
 )
 from hashlib import sha256
-from fastapi import APIRouter
-
-router = APIRouter()
 
 
 class AccountStatus(ABC):
@@ -133,10 +130,3 @@ class Account(ABC):
 
     def get_transactions(self) -> List[Transaction]:
         return self._transactions.copy()
-
-@router.get("/accounts")
-def get_accounts():
-    """
-    Endpoint to get a list of accounts (mock data for now).
-    """
-    return {"message": "List of accounts"}
