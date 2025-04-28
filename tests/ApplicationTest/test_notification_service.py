@@ -3,20 +3,22 @@ from unittest.mock import MagicMock, Mock
 from application.services.notification_service import NotificationService
 from domain.accounts import Account
 from domain.transactions import Transaction, DepositTransactionType, WithdrawTransactionType, TransferTransactionType
-from infrastructure.Notifications.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
+from infrastructure.notifications.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
 
 
 class TestNotificationService(unittest.TestCase):
     def setUp(self):
         """Set up the test environment before each test."""
-        # Mock the email and SMS adapters
+        # Mock the email, SMS adapters, and logging service
         self.email_adapter = MagicMock(spec=EmailNotificationAdapter)
         self.sms_adapter = MagicMock(spec=SMSNotificationAdapter)
+        self.logging_service = MagicMock()  # Add mock for LoggingService
 
-        # Initialize the NotificationService with mocked adapters
+        # Initialize the NotificationService with mocked adapters and logging service
         self.notification_service = NotificationService(
             email_adapter=self.email_adapter,
-            sms_adapter=self.sms_adapter
+            sms_adapter=self.sms_adapter,
+            logging_service=self.logging_service
         )
 
         # Create a mock account with email and phone attributes
@@ -41,13 +43,12 @@ class TestNotificationService(unittest.TestCase):
         self.withdraw_txn.transaction_id = "TXN002"
         self.withdraw_txn.account = self.mock_account
 
-        # Updated transfer transaction with required fields
         self.transfer_txn = Transaction(
             transaction_type=TransferTransactionType(),
             amount=75.00,
             account_id="ACC123",
-            source_account_id="ACC123",  # Added
-            destination_account_id="ACC456"  # Added
+            source_account_id="ACC123",
+            destination_account_id="ACC456"
         )
         self.transfer_txn.transaction_id = "TXN003"
         self.transfer_txn.account = self.mock_account
@@ -60,10 +61,8 @@ class TestNotificationService(unittest.TestCase):
         # Override notification strategies with mocks for observer pattern tests
         self.notification_service._notification_strategies["default"] = [self.mock_logger]
         self.notification_service._notification_strategies["standard"] = [self.mock_logger, self.mock_email]
-        self.notification_service._notification_strategies["premium"] = [self.mock_logger, self.mock_email,
-                                                                         self.mock_sms]
+        self.notification_service._notification_strategies["premium"] = [self.mock_logger, self.mock_email, self.mock_sms]
 
-    # Tests from test_notification_service.py
     def test_notify_transaction_default_strategy(self):
         """Test that notify_transaction triggers default strategy (logging)."""
         self.notification_service.notify_transaction(self.deposit_txn)
@@ -109,40 +108,54 @@ class TestNotificationService(unittest.TestCase):
         self.assertEqual(len(self.notification_service._notification_strategies["standard"]), 3)
         self.assertEqual(self.notification_service._notification_strategies["standard"][2], custom_strategy)
 
-    # Tests adapted from test_notification_serviceImpl.py
     def test_init_with_adapters(self):
         """Test initialization with adapters."""
         service = NotificationService(
             email_adapter=self.email_adapter,
-            sms_adapter=self.sms_adapter
+            sms_adapter=self.sms_adapter,
+            logging_service=self.logging_service
         )
         self.assertEqual(service.email_adapter, self.email_adapter)
         self.assertEqual(service.sms_adapter, self.sms_adapter)
 
     def test_init_without_adapters(self):
         """Test initialization without adapters."""
-        service = NotificationService()
+        service = NotificationService(logging_service=self.logging_service)
         self.assertIsNone(service.email_adapter)
         self.assertIsNone(service.sms_adapter)
 
     def test_send_email_notification_deposit(self):
         """Test sending email notification for a deposit transaction."""
-        # Reset the notification strategies to use the real _email_notifier
         self.notification_service._notification_strategies["standard"] = [
             self.mock_logger, self.notification_service._email_notifier
         ]
 
-        # Trigger the email notifier directly
         self.notification_service._email_notifier(self.deposit_txn)
 
         self.email_adapter.send.assert_called_once()
         args = self.email_adapter.send.call_args[0]
 
-        # Check correct recipient, subject, and content formatting
         self.assertEqual(args[0], "test@example.com")
         self.assertEqual(args[1], "Deposit Notification")
         self.assertIn("deposit of $100.0", args[2].lower())
         self.assertIn("ACC123", args[2])
+
+        # Verify logging calls
+        self.logging_service.log_service_call.assert_any_call(
+            service_name="NotificationService",
+            method_name="_email_notifier",
+            status="started",
+            duration_ms=0,
+            params={"transaction_id": "TXN001", "transaction_type": "DEPOSIT"}
+        )
+        self.logging_service.log_service_call.assert_any_call(
+            service_name="NotificationService",
+            method_name="_email_notifier",
+            status="success",
+            duration_ms=self.logging_service.log_service_call.call_args[1]["duration_ms"],
+            params={"transaction_id": "TXN001", "transaction_type": "DEPOSIT"},
+            result="Email sent to test@example.com"
+        )
 
     def test_send_email_notification_withdraw(self):
         """Test sending email notification for a withdrawal transaction."""
@@ -160,6 +173,16 @@ class TestNotificationService(unittest.TestCase):
         self.assertIn("withdrawal of $50.0", args[2].lower())
         self.assertIn("ACC123", args[2])
 
+        # Verify logging calls
+        self.logging_service.log_service_call.assert_any_call(
+            service_name="NotificationService",
+            method_name="_email_notifier",
+            status="success",
+            duration_ms=self.logging_service.log_service_call.call_args[1]["duration_ms"],
+            params={"transaction_id": "TXN002", "transaction_type": "WITHDRAW"},
+            result="Email sent to test@example.com"
+        )
+
     def test_send_email_notification_transfer(self):
         """Test sending email notification for a transfer transaction."""
         self.notification_service._notification_strategies["standard"] = [
@@ -174,15 +197,23 @@ class TestNotificationService(unittest.TestCase):
         self.assertEqual(args[0], "test@example.com")
         self.assertEqual(args[1], "Transfer Notification")
         self.assertIn("transfer of $75.0", args[2].lower())
-        self.assertIn("ACC123", args[2])  # Source account
-        self.assertIn("ACC456", args[2])  # Destination account
+        self.assertIn("ACC123", args[2])
+        self.assertIn("ACC456", args[2])
+
+        # Verify logging calls
+        self.logging_service.log_service_call.assert_any_call(
+            service_name="NotificationService",
+            method_name="_email_notifier",
+            status="success",
+            duration_ms=self.logging_service.log_service_call.call_args[1]["duration_ms"],
+            params={"transaction_id": "TXN003", "transaction_type": "TRANSFER"},
+            result="Email sent to test@example.com"
+        )
 
     def test_send_email_notification_no_adapter(self):
         """Test sending email notification with no adapter."""
-        service = NotificationService()  # No email adapter
-        service._email_notifier(self.deposit_txn)  # Should not call send
-        # No adapter, so no send call should be made
-        # We can't directly assert on a non-mocked adapter, but the method should return silently
+        service = NotificationService(logging_service=self.logging_service)  # No email adapter
+        service._email_notifier(self.deposit_txn)  # Should not call send or log
 
     def test_send_sms_notification_deposit(self):
         """Test sending SMS notification for a deposit transaction."""
@@ -196,9 +227,17 @@ class TestNotificationService(unittest.TestCase):
         args = self.sms_adapter.send.call_args[0]
 
         self.assertEqual(args[0], "+12345678900")
-        self.assertEqual(args[1], "Deposit Alert")
-        self.assertIn("deposit of $100.0", args[2].lower())
-        self.assertIn("ACC123", args[2])
+        self.assertEqual(args[1], "Deposit Alert: Deposit of $100.0 to account ACC123 completed.")
+
+        # Verify logging calls
+        self.logging_service.log_service_call.assert_any_call(
+            service_name="NotificationService",
+            method_name="_sms_notifier",
+            status="success",
+            duration_ms=self.logging_service.log_service_call.call_args[1]["duration_ms"],
+            params={"transaction_id": "TXN001", "transaction_type": "DEPOSIT"},
+            result="SMS sent to +12345678900"
+        )
 
     def test_send_sms_notification_withdraw(self):
         """Test sending SMS notification for a withdrawal transaction."""
@@ -212,9 +251,17 @@ class TestNotificationService(unittest.TestCase):
         args = self.sms_adapter.send.call_args[0]
 
         self.assertEqual(args[0], "+12345678900")
-        self.assertEqual(args[1], "Withdrawal Alert")
-        self.assertIn("withdrawal of $50.0", args[2].lower())
-        self.assertIn("ACC123", args[2])
+        self.assertEqual(args[1], "Withdrawal Alert: Withdrawal of $50.0 from account ACC123 completed.")
+
+        # Verify logging calls
+        self.logging_service.log_service_call.assert_any_call(
+            service_name="NotificationService",
+            method_name="_sms_notifier",
+            status="success",
+            duration_ms=self.logging_service.log_service_call.call_args[1]["duration_ms"],
+            params={"transaction_id": "TXN002", "transaction_type": "WITHDRAW"},
+            result="SMS sent to +12345678900"
+        )
 
     def test_send_sms_notification_transfer(self):
         """Test sending SMS notification for a transfer transaction."""
@@ -228,20 +275,25 @@ class TestNotificationService(unittest.TestCase):
         args = self.sms_adapter.send.call_args[0]
 
         self.assertEqual(args[0], "+12345678900")
-        self.assertEqual(args[1], "Transfer Alert")
-        self.assertIn("transfer of $75.0", args[2].lower())
-        self.assertIn("ACC123", args[2])  # Source account
-        self.assertIn("ACC456", args[2])  # Destination account
+        self.assertEqual(args[1], "Transfer Alert: Transfer of $75.0 from account ACC123 to ACC456 completed.")
+
+        # Verify logging calls
+        self.logging_service.log_service_call.assert_any_call(
+            service_name="NotificationService",
+            method_name="_sms_notifier",
+            status="success",
+            duration_ms=self.logging_service.log_service_call.call_args[1]["duration_ms"],
+            params={"transaction_id": "TXN003", "transaction_type": "TRANSFER"},
+            result="SMS sent to +12345678900"
+        )
 
     def test_send_sms_notification_no_adapter(self):
         """Test sending SMS notification with no adapter."""
-        service = NotificationService()  # No SMS adapter
-        service._sms_notifier(self.deposit_txn)  # Should not call send
-        # No adapter, so no send call should be made
+        service = NotificationService(logging_service=self.logging_service)  # No SMS adapter
+        service._sms_notifier(self.deposit_txn)  # Should not call send or log
 
     def test_unknown_transaction_type(self):
         """Test handling of an unknown transaction type."""
-        # Create a transaction with unknown type
         mock_txn_type = MagicMock()
         mock_txn_type.name = "UNKNOWN_TYPE"
 
