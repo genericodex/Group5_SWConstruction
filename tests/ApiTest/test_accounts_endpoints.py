@@ -7,8 +7,9 @@ from uuid import uuid4
 
 from api.v1.endpoints.accounts import router
 from application.services.account_service import AccountCreationService
+from application.services.fund_transfer import FundTransferService
 from application.services.transaction_service import TransactionService
-from application.services.fund_transfer_service import FundTransferService
+
 from application.exceptions.exceptions import AccountNotFoundError, InvalidTransferError
 from infrastructure.repositories.account_repository import AccountRepository
 from infrastructure.repositories.transaction_repository import TransactionRepository

@@ -2,10 +2,11 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from application.services.account_service import AccountCreationService
+from application.services.fund_transfer import FundTransferService
 from infrastructure.database.db import get_db
 
 from application.services.transaction_service import TransactionService
-from application.services.fund_transfer_service import FundTransferService
+
 from application.services.notification_service import NotificationService
 from application.services.logging_service import LoggingService
 from infrastructure.repositories.account_repository import AccountRepository
