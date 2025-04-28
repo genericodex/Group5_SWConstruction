@@ -32,7 +32,7 @@ The system follows a layered architecture with four distinct layers: Domain, App
   - Transfers are treated as atomic operations, ensuring both source withdrawal and destination deposit succeed or fail together.
 
 **UML Diagram**:  
-![DomainLayer.png](UML%20diagrams/week2/DomainLayer.png)
+![domainLayer.png](UML%20diagrams/week2/domainLayer.png)
 
 #### 2.1.2 Application Layer  
 - **Role**: Orchestrates business operations by coordinating between the Domain and Infrastructure Layers, defining interfaces for persistence and external services that the Infrastructure Layer implements.  
@@ -43,7 +43,7 @@ The system follows a layered architecture with four distinct layers: Domain, App
   - Employs a logging decorator or service to log operations without modifying core logic.
 
 **UML Diagram**:  
-![AplicationLayer.png](UML%20diagrams/week2/AplicationLayer.png)
+![applicationLayer.png](UML%20diagrams/week2/applicationLayer.png)
 
 #### 2.1.3 Infrastructure Layer  
 - **Role**: Provides concrete implementations of persistence and external service interfaces defined by the Application Layer.  
@@ -54,7 +54,7 @@ The system follows a layered architecture with four distinct layers: Domain, App
   - Integrates with external services for notifications and logging.
 
 **UML Diagram**:  
-![InfrastuctureLayer.png](UML%20diagrams/week2/InfrastuctureLayer.png)
+![infrastrucutreLayer.png](UML%20diagrams/week2/infrastrucutreLayer.png)
 
 #### 2.1.4 Presentation Layer  
 - **Role**: Handles incoming requests and outgoing responses via REST API endpoints.  
@@ -72,8 +72,6 @@ The system follows a layered architecture with four distinct layers: Domain, App
   - Forwards requests to Application Layer services (e.g., `FundTransferService.transfer_funds()`).  
   - Returns JSON responses with transaction details or error messages.
 
-**UML Diagram**:  
-![PresentationLayer.png](UML%20diagrams/week2/PresentationLayer.png)
 
 ### 2.2 Layer Integration  
 - **Domain ↔ Application**: The Domain Layer provides business logic and entities (`Account`, `Transaction`) that the Application Layer uses to perform operations. `FundTransferService` uses `BusinessRuleService` for transfer validation.  
@@ -82,7 +80,7 @@ The system follows a layered architecture with four distinct layers: Domain, App
 - **Presentation ↔ External Clients**: The Presentation Layer receives HTTP requests and returns responses, acting as the system’s entry point.  
 - **Cross-Cutting Concerns**: Logging is applied via a decorator or `LoggingService`, and notifications are triggered post-transaction via `NotificationService`, ensuring separation of concerns.
 
-![CompleteLayer.png](UML%20diagrams/week2/CompleteLayer.png)
+
 
 ### 2.3 Technical Explanation of Workflows  
 The new features (transfers, notifications, and logging) integrate seamlessly into the existing architecture while adhering to the same design principles (e.g., Separation of Concerns, Dependency Inversion).  
