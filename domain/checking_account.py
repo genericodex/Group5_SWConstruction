@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from domain.interest import CheckingInterestStrategy
 from domain.accounts import Account, AccountType
 
 class CheckingAccountType(AccountType):
@@ -17,6 +18,7 @@ class CheckingAccount(Account):
             _balance=initial_balance
         )
         self.hash_password(password)
+        self.set_interest_strategy(CheckingInterestStrategy())
 
     def can_withdraw(self, amount: float) -> bool:
         return self.balance() >= amount

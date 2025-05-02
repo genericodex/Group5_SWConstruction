@@ -34,6 +34,11 @@ class AccountType(ABC):
     def name(self) -> str:
         pass
 
+class InterestStrategy(ABC):
+    @abstractmethod
+    def calculate_interest(self, balance: float, start_date: datetime, end_date: datetime) -> float:
+        pass
+
 @dataclass
 class Account(ABC):
     account_id: str
@@ -45,8 +50,8 @@ class Account(ABC):
     creation_date: datetime = field(default_factory=datetime.now)
     _transactions: List[Transaction] = field(default_factory=list, init=False)
     _observers: List[Callable] = field(default_factory=list, init=False)
-
-
+    interest_strategy: InterestStrategy = None
+    accrued_interest: float = 0.0
 
     def hash_password(self, password: str) -> None:
         """Hashes and sets the password for the account."""
@@ -133,6 +138,16 @@ class Account(ABC):
 
     def get_transactions(self) -> List[Transaction]:
         return self._transactions.copy()
+
+    def set_interest_strategy(self, strategy: InterestStrategy):
+        self.interest_strategy = strategy
+
+    def calculate_period_interest(self, start_date: datetime, end_date: datetime) -> float:
+        if not self.interest_strategy:
+            return 0.0
+        interest = self.interest_strategy.calculate_interest(self.balance(), start_date, end_date)
+        self.accrued_interest += interest
+        return interest
 
 @router.get("/accounts")
 def get_accounts():

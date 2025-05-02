@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from domain.interest import SavingsInterestStrategy
 from domain.accounts import Account, AccountType
 
 class SavingsAccountType(AccountType):
@@ -19,6 +20,7 @@ class SavingsAccount(Account):
             _balance=initial_balance
         )
         self.hash_password(password)
+        self.set_interest_strategy(SavingsInterestStrategy())
 
     def can_withdraw(self, amount: float) -> bool:
         return (self.balance() - amount) >= self.MINIMUM_BALANCE
