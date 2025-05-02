@@ -8,6 +8,7 @@ from domain.transactions import (
 )
 from hashlib import sha256
 from fastapi import APIRouter
+from domain.monthly_statement import MonthlyStatement
 
 router = APIRouter()
 
@@ -52,6 +53,7 @@ class Account(ABC):
     _observers: List[Callable] = field(default_factory=list, init=False)
     interest_strategy: InterestStrategy = None
     accrued_interest: float = 0.0
+    _monthly_statements: List[MonthlyStatement] = field(default_factory=list, init=False)
 
     def hash_password(self, password: str) -> None:
         """Hashes and sets the password for the account."""
@@ -148,6 +150,38 @@ class Account(ABC):
         interest = self.interest_strategy.calculate_interest(self.balance(), start_date, end_date)
         self.accrued_interest += interest
         return interest
+
+    def generate_monthly_statement(self, start_date: datetime, end_date: datetime) -> MonthlyStatement:
+        # Filter transactions for the period
+        period_transactions = [
+            t for t in self._transactions 
+            if start_date <= t.timestamp <= end_date
+        ]
+        
+        # Calculate starting and ending balances
+        starting_balance = self._balance - sum(
+            t.amount for t in period_transactions
+        )
+        
+        # Calculate interest for the period
+        interest = self.calculate_period_interest(start_date, end_date)
+        
+        statement = MonthlyStatement(
+            account_id=self.account_id,
+            statement_period=f"{start_date.strftime('%B %Y')}",
+            start_date=start_date,
+            end_date=end_date,
+            starting_balance=starting_balance,
+            ending_balance=self._balance,
+            interest_earned=interest,
+            transactions=period_transactions
+        )
+        
+        self._monthly_statements.append(statement)
+        return statement
+    
+    def get_monthly_statements(self) -> List[MonthlyStatement]:
+        return self._monthly_statements.copy()
 
 @router.get("/accounts")
 def get_accounts():
