@@ -7,6 +7,9 @@ from domain.transactions import (
     DepositTransactionType, WithdrawTransactionType, TransferTransactionType
 )
 from hashlib import sha256
+from fastapi import APIRouter
+
+router = APIRouter()
 
 
 class AccountStatus(ABC):
