@@ -6,37 +6,6 @@ from domain.transactions import Transaction
 
 class TestAccount(unittest.TestCase):
     def setUp(self):
-<<<<<<< HEAD
-        self.account = CheckingAccount("C12345", "testuser", "password123", 500.0)
-
-    def test_initialization(self):
-        self.assertEqual(self.account.account_id, "C12345")
-        self.assertEqual(self.account.username, "testuser")
-        self.assertEqual(self.account.get_balance(), 500.0)
-        self.assertEqual(self.account.account_type, AccountType.CHECKING)
-        self.assertEqual(self.account.status, AccountStatus.ACTIVE)
-        self.assertIsInstance(self.account.creation_date, datetime)
-
-    def test_password_verification(self):
-        self.assertTrue(self.account.verify_password("password123"))
-        self.assertFalse(self.account.verify_password("wrongpassword"))
-
-    def test_deposit(self):
-        initial_balance = self.account.balance
-        amount = 100.0
-
-        transaction = self.account.deposit(amount)
-
-        self.assertEqual(self.account.balance, initial_balance + amount)
-        self.assertEqual(transaction.amount, amount)
-        self.assertEqual(transaction.transaction_type, TransactionType.DEPOSIT)
-        self.assertEqual(transaction.account_id, self.account.account_id)
-
-        # Check that transaction was added to history
-        transactions = self.account.get_transactions()
-        self.assertEqual(len(transactions), 1)
-        self.assertEqual(transactions[0], transaction)
-=======
         # Set up a checking account for general tests
         self.account = CheckingAccount(
             account_id="acc123",
@@ -62,7 +31,6 @@ class TestAccount(unittest.TestCase):
         self.assertEqual(len(self.account.get_transactions()), 1)
         self.assertEqual(transaction.transaction_type.name, "DEPOSIT")
         self.assertEqual(transaction.amount, 100.0)
->>>>>>> c761c5edffc07abf770bfbaa78990093ce673367
 
     def test_deposit_negative_amount(self):
         """Test depositing a negative amount raises an error."""
@@ -157,17 +125,6 @@ class TestAccount(unittest.TestCase):
 
 class TestSavingsAccount(unittest.TestCase):
     def setUp(self):
-<<<<<<< HEAD
-        self.account = SavingsAccount("S12345", "testuser", "password123", 500.0)
-
-    def test_initialization(self):
-        self.assertEqual(self.account.account_id, "S12345")
-        self.assertEqual(self.account.username, "testuser")
-        self.assertEqual(self.account.get_balance(), 500.0)
-        self.assertEqual(self.account.account_type, AccountType.SAVINGS)
-        self.assertEqual(self.account.status, AccountStatus.ACTIVE)
-        self.assertIsInstance(self.account.creation_date, datetime)
-=======
         # Set up a savings account with a minimum balance of 100.0
         self.account = SavingsAccount(
             account_id="acc789",
@@ -182,40 +139,11 @@ class TestSavingsAccount(unittest.TestCase):
         self.assertEqual(self.account.get_balance(), 150.0)
         self.assertEqual(transaction.transaction_type.name, "WITHDRAW")
         self.assertEqual(transaction.amount, 50.0)
->>>>>>> c761c5edffc07abf770bfbaa78990093ce673367
 
     def test_savings_withdraw_below_minimum(self):
         """Test withdrawing below minimum balance raises an error."""
         with self.assertRaises(ValueError):
             self.account.withdraw(150.0)  # Would bring balance to 50.0 < 100.0
 
-<<<<<<< HEAD
-
-class TestBusinessRuleService(unittest.TestCase):
-    def setUp(self):
-        self.checking = CheckingAccount("C12345", "testuser", "password123", 500.0)
-        self.savings = SavingsAccount("S12345", "testuser", "password123", 500.0)
-        self.service = BusinessRuleService()
-
-    def test_check_withdraw_allowed(self):
-        # Checking account
-        self.assertTrue(self.service.check_withdraw_allowed(self.checking, 500.0))
-        self.assertFalse(self.service.check_withdraw_allowed(self.checking, 500.01))
-
-        # Savings account
-        withdrawable_amount = self.savings.balance - SavingsAccount.MINIMUM_BALANCE
-        self.assertTrue(self.service.check_withdraw_allowed(self.savings, withdrawable_amount))
-        self.assertFalse(self.service.check_withdraw_allowed(self.savings, withdrawable_amount + 0.01))
-
-    def test_validate_deposit_amount(self):
-        self.assertTrue(self.service.validate_deposit_amount(1.0))
-        self.assertTrue(self.service.validate_deposit_amount(0.01))
-        self.assertFalse(self.service.validate_deposit_amount(0.0))
-        self.assertFalse(self.service.validate_deposit_amount(-1.0))
-
-
-if __name__ == '__main__':
-=======
 if __name__ == "__main__":
->>>>>>> c761c5edffc07abf770bfbaa78990093ce673367
     unittest.main()

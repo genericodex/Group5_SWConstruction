@@ -9,6 +9,7 @@ class SavingsAccountType(AccountType):
 
 @dataclass
 class SavingsAccount(Account):
+    """A savings account with a minimum balance requirement."""
     MINIMUM_BALANCE = 100.00
 
     def __init__(self, account_id: str, username: str, password: str, initial_balance: float = 0.0):
@@ -23,9 +24,11 @@ class SavingsAccount(Account):
         self.set_interest_strategy(SavingsInterestStrategy())
 
     def can_withdraw(self, amount: float) -> bool:
+        """Check if withdrawal is allowed while maintaining minimum balance."""
         return (self.balance() - amount) >= self.MINIMUM_BALANCE
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return a string representation of the savings account."""
         return (f"SavingsAccount(account_id={self.account_id}, "
                 f"balance={self.balance()}, status={self.status.name}, "
                 f"creation_date={self.creation_date})")

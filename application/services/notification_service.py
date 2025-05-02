@@ -2,21 +2,18 @@ from typing import List, Callable, Dict, Optional
 from domain.transactions import Transaction
 from domain.accounts import Account
 from domain.observers import transaction_logger, setup_logging
-from infrastructure.Notifications.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
-
+from infrastructure.notifications.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
+import time
 
 class NotificationService:
-    """
-    Application service responsible for handling transaction notifications
-    and dispatching events (SMS, email) when transactions are completed.
-    """
-
     def __init__(self, email_adapter: Optional[EmailNotificationAdapter] = None,
-                 sms_adapter: Optional[SMSNotificationAdapter] = None):
-        # Set up logging for transactions
+                 sms_adapter: Optional[SMSNotificationAdapter] = None,
+                 logging_service=None):  # Add LoggingService dependency
+        # Set up existing logging for transactions
         setup_logging()
         self.email_adapter = email_adapter
         self.sms_adapter = sms_adapter
+        self.logging_service = logging_service  # Initialize LoggingService
 
         # Templates for different transaction types
         self.email_templates = {
@@ -61,65 +58,128 @@ class NotificationService:
         if not self.email_adapter or not hasattr(transaction, 'account'):
             return
 
-        recipient_email = transaction.account.email  # Assuming Account has an email attribute
-        transaction_type = transaction.transaction_type.name
-        template = self.email_templates.get(transaction_type)
+        start_time = time.time()
+        params = {"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type.name}
+        if self.logging_service:
+            self.logging_service.log_service_call(
+                service_name="NotificationService",
+                method_name="_email_notifier",
+                status="started",
+                duration_ms=0,
+                params=params
+            )
 
-        if not template:
-            return
+        try:
+            recipient_email = transaction.account.email
+            transaction_type = transaction.transaction_type.name
+            template = self.email_templates.get(transaction_type)
 
-        subject = template["subject"]
-        content = template["content"].format(
-            amount=transaction.amount,
-            account_id=transaction.account_id,
-            source_account_id=transaction.source_account_id,
-            destination_account_id=transaction.destination_account_id
-        )
+            if not template:
+                return
 
-        self.email_adapter.send(recipient_email, subject, content)
+            subject = template["subject"]
+            content = template["content"].format(
+                amount=transaction.amount,
+                account_id=transaction.account_id,
+                source_account_id=transaction.source_account_id,
+                destination_account_id=transaction.destination_account_id
+            )
+
+            self.email_adapter.send(recipient_email, subject, content)
+
+            if self.logging_service:
+                duration_ms = (time.time() - start_time) * 1000
+                self.logging_service.log_service_call(
+                    service_name="NotificationService",
+                    method_name="_email_notifier",
+                    status="success",
+                    duration_ms=duration_ms,
+                    params=params,
+                    result=f"Email sent to {recipient_email}"
+                )
+
+        except Exception as e:
+            if self.logging_service:
+                duration_ms = (time.time() - start_time) * 1000
+                self.logging_service.log_service_call(
+                    service_name="NotificationService",
+                    method_name="_email_notifier",
+                    status="failed",
+                    duration_ms=duration_ms,
+                    params=params,
+                    error=str(e)
+                )
+            raise
 
     def _sms_notifier(self, transaction: Transaction) -> None:
         """Internal SMS notifier using the adapter"""
         if not self.sms_adapter or not hasattr(transaction, 'account'):
             return
 
-        recipient_phone = transaction.account.phone  # Assuming Account has a phone attribute
-        transaction_type = transaction.transaction_type.name
-        template = self.sms_templates.get(transaction_type)
+        start_time = time.time()
+        params = {"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type.name}
+        if self.logging_service:
+            self.logging_service.log_service_call(
+                service_name="NotificationService",
+                method_name="_sms_notifier",
+                status="started",
+                duration_ms=0,
+                params=params
+            )
 
-        if not template:
-            return
+        try:
+            recipient_phone = transaction.account.phone
+            transaction_type = transaction.transaction_type.name
+            template = self.sms_templates.get(transaction_type)
 
-        subject = template["subject"]
-        content = template["content"].format(
-            amount=transaction.amount,
-            account_id=transaction.account_id,
-            source_account_id=transaction.source_account_id,
-            destination_account_id=transaction.destination_account_id
-        )
+            if not template:
+                return
 
-        self.sms_adapter.send(recipient_phone, subject, content)
+            # Combine subject and content into a single message for SMS
+            message = f"{template['subject']}: {template['content']}".format(
+                amount=transaction.amount,
+                account_id=transaction.account_id,
+                source_account_id=transaction.source_account_id,
+                destination_account_id=transaction.destination_account_id
+            )
+
+            self.sms_adapter.send(recipient_phone, message)
+
+            if self.logging_service:
+                duration_ms = (time.time() - start_time) * 1000
+                self.logging_service.log_service_call(
+                    service_name="NotificationService",
+                    method_name="_sms_notifier",
+                    status="success",
+                    duration_ms=duration_ms,
+                    params=params,
+                    result=f"SMS sent to {recipient_phone}"
+                )
+
+        except Exception as e:
+            if self.logging_service:
+                duration_ms = (time.time() - start_time) * 1000
+                self.logging_service.log_service_call(
+                    service_name="NotificationService",
+                    method_name="_sms_notifier",
+                    status="failed",
+                    duration_ms=duration_ms,
+                    params=params,
+                    error=str(e)
+                )
+            raise
 
     def register_account_observers(self, account: Account, account_tier: str = "default") -> None:
-        """
-        Register the appropriate notification observers based on account tier.
-        """
         strategies = self._notification_strategies.get(account_tier.lower(),
                                                        self._notification_strategies["default"])
         for observer in strategies:
             account.add_observer(observer)
 
     def notify_transaction(self, transaction: Transaction) -> None:
-        """
-        Manually trigger notifications for a transaction.
-        """
         for observer in self._notification_strategies["default"]:
             observer(transaction)
 
     def add_custom_notification_strategy(self, tier: str, strategy: Callable) -> None:
-        """
-        Add a custom notification strategy to a specific account tier.
-        """
         if tier not in self._notification_strategies:
             self._notification_strategies[tier] = [transaction_logger]
         self._notification_strategies[tier].append(strategy)

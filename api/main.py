@@ -1,86 +1,28 @@
 from fastapi import FastAPI
-from presentation.api.v1.endpoints import accounts, notifications
-from presentation.api.dependencies import notification_service
+from api.v1.endpoints import accounts, notifications, logs
 
-from domain.accounts import AccountType
-from infrastructure.Authentication.login import InMemoryAuthenticationService
-from infrastructure.Notifications.notifications import NotificationService
-from api.routers import refine_layer
-
-app = FastAPI(title="Banking System API")
-app.include_router(refine_layer.router, prefix="/refine-layer")
-
-# Notification service initialization
-notification_service = NotificationService()
-
-# Initialize the authentication service with notification integration
-auth_service = InMemoryAuthenticationService(notification_service)
+app = FastAPI(
+    title="Banking System API",
+    description="API for banking operations including accounts, transactions, transfers, and notifications",
+    version="1.0.0"
+)
 
 # Include the API routes
 app.include_router(accounts.router, prefix="/v1", tags=["accounts"])
 app.include_router(notifications.router, prefix="/v1", tags=["notifications"])
+app.include_router(logs.router, prefix="/v1", tags=["logs"])
 
-@app.on_event("startup")
-async def startup_event():
+# Health check endpoint
+@app.get("/health", tags=["health"])
+async def health_check():
     """
-    Run startup initialization, such as registering demo accounts and testing login scenarios.
+    Health check endpoint to verify API is running
     """
-    print("Starting up the Banking System API...")
-
-    # Register sample accounts (with notifications)
-    print("Registering accounts...")
-    auth_service.register(
-        account_id="123",
-        username="user1",
-        password="password123",
-        account_type=AccountType.SAVINGS
-    )
-    auth_service.register(
-        account_id="456",
-        username="user2",
-        password="securePass456",
-        account_type=AccountType.CHECKING
-    )
-    print("Accounts registered!")
-
-    # Logging in as a demonstration
-    print("Demonstration: Logging in...")
-
-    try:
-        logged_in_account = auth_service.login(username="user1", password="password123")
-        notification_service.notify(
-            f"Login successful! Welcome, {logged_in_account.username}. Account ID: {logged_in_account.account_id}"
-        )
-    except ValueError as e:
-        notification_service.notify(f"Login failed: {e}")
-
-    print("Attempting invalid login...")
-    try:
-        auth_service.login(username="user1", password="wrongPassword")
-    except ValueError as e:
-        notification_service.notify(f"Login failed: {e}")
-
-    print("Logging in as user2...")
-    try:
-        logged_in_account = auth_service.login(username="user2", password="securePass456")
-        notification_service.notify(
-            f"Login successful! Welcome, {logged_in_account.username}."
-        )
-    except ValueError as e:
-        notification_service.notify(f"Login failed: {e}")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Handle application shutdown events.
-    """
-    print("Shutting down the Banking System API...")
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     import uvicorn
-    print("Starting FastAPI server...")
-    print("Access the API at: http://localhost:8000")
-    print("Interactive API docs at: http://localhost:8000/docs")
+
     uvicorn.run(
         app,
         host="127.0.0.1",

@@ -9,10 +9,11 @@ from domain.checking_account import CheckingAccount
 
 class TestAccountCreationService(unittest.TestCase):
     def setUp(self):
-        # Create mock repository and notification service
+        # Create mock repository, notification service, and logging service
         self.mock_repository = Mock()
         self.mock_notification_service = Mock(spec=NotificationService)
-        self.service = AccountCreationService(self.mock_repository, self.mock_notification_service)
+        self.mock_logging_service = Mock()  # Add mock for LoggingService
+        self.service = AccountCreationService(self.mock_repository, self.mock_notification_service, self.mock_logging_service)
         self.username = "test_user"
         self.password = "secure_password"
 
@@ -34,6 +35,30 @@ class TestAccountCreationService(unittest.TestCase):
         self.assertTrue(saved_account.verify_password(self.password))
         self.assertEqual(saved_account.balance(), initial_deposit)
 
+        # Optional: Verify logging calls
+        self.mock_logging_service.log_service_call.assert_any_call(
+            service_name="AccountCreationService",
+            method_name="create_account",
+            status="started",
+            duration_ms=0,
+            params={
+                "account_type": "savings",
+                "username": "test_user",
+                "initial_deposit": 150.0,
+                "account_tier": "default"
+            }
+        )
+        self.mock_logging_service.info.assert_called_once_with(
+            message="Account created successfully",
+            context={
+                "account_id": account_id,
+                "account_type": "savings",
+                "username": "test_user",
+                "initial_deposit": 150.0,
+                "account_tier": "default"
+            }
+        )
+
     def test_create_savings_account_below_minimum_balance(self):
         # Arrange
         account_type = "savings"
@@ -47,6 +72,21 @@ class TestAccountCreationService(unittest.TestCase):
             f"Savings account requires a minimum deposit of ${SavingsAccount.MINIMUM_BALANCE}"
         )
         self.mock_repository.save.assert_not_called()
+
+        # Optional: Verify logging calls
+        self.mock_logging_service.log_service_call.assert_any_call(
+            service_name="AccountCreationService",
+            method_name="create_account",
+            status="failed",
+            duration_ms=self.mock_logging_service.log_service_call.call_args[1]["duration_ms"],
+            params={
+                "account_type": "savings",
+                "username": "test_user",
+                "initial_deposit": 50.0,
+                "account_tier": "default"
+            },
+            error=f"Savings account requires a minimum deposit of ${SavingsAccount.MINIMUM_BALANCE}"
+        )
 
     def test_create_checking_account_success(self):
         # Arrange
@@ -66,6 +106,30 @@ class TestAccountCreationService(unittest.TestCase):
         self.assertTrue(saved_account.verify_password(self.password))
         self.assertEqual(saved_account.balance(), initial_deposit)
 
+        # Optional: Verify logging calls
+        self.mock_logging_service.log_service_call.assert_any_call(
+            service_name="AccountCreationService",
+            method_name="create_account",
+            status="started",
+            duration_ms=0,
+            params={
+                "account_type": "checking",
+                "username": "test_user",
+                "initial_deposit": 0.0,
+                "account_tier": "default"
+            }
+        )
+        self.mock_logging_service.info.assert_called_once_with(
+            message="Account created successfully",
+            context={
+                "account_id": account_id,
+                "account_type": "checking",
+                "username": "test_user",
+                "initial_deposit": 0.0,
+                "account_tier": "standard"
+            }
+        )
+
     def test_create_account_invalid_type(self):
         # Arrange
         account_type = "invalid"
@@ -80,12 +144,28 @@ class TestAccountCreationService(unittest.TestCase):
         )
         self.mock_repository.save.assert_not_called()
 
+        # Optional: Verify logging calls
+        self.mock_logging_service.log_service_call.assert_any_call(
+            service_name="AccountCreationService",
+            method_name="create_account",
+            status="failed",
+            duration_ms=self.mock_logging_service.log_service_call.call_args[1]["duration_ms"],
+            params={
+                "account_type": "invalid",
+                "username": "test_user",
+                "initial_deposit": 100.0,
+                "account_tier": "default"
+            },
+            error="Unknown account type. Choose 'checking' or 'savings'"
+        )
+
     def is_valid_uuid(self, uuid_str: str) -> bool:
         try:
             UUID(uuid_str)
             return True
         except ValueError:
             return False
+
 
 if __name__ == '__main__':
     unittest.main()
