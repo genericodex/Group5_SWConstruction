@@ -4,11 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d0001e19-dad0-42a7-bac8-5ab8273e530f" name="Changes" comment="documentation and uml diagrams">
-      <change afterPath="$PROJECT_DIR$/application/services/notification_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/Authentication/authentication_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/Notifications/notifications.py" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/Notifications/notifications.py" afterDir="false" />
+    <list default="true" id="d0001e19-dad0-42a7-bac8-5ab8273e530f" name="Changes" comment="updated">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,27 +43,36 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python tests.Python tests in AccountCreationServiceTest.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in TransactionServiceTest.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in api_test.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in test_account_repository.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in test_transaction_repository.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in transaction_repository.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python.account_repository.executor&quot;: &quot;Run&quot;,
-    &quot;Python.dependencies.executor&quot;: &quot;Run&quot;,
-    &quot;Python.login.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test_login.executor&quot;: &quot;Run&quot;,
-    &quot;Python.transaction_repository.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/hp/Desktop/Group5_SWConstruction&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python tests.Python tests in AccountCreationServiceTest.py.executor": "Run",
+    "Python tests.Python tests in TransactionServiceTest.py.executor": "Run",
+    "Python tests.Python tests in api_test.py.executor": "Run",
+    "Python tests.Python tests in test_account_repository.py.executor": "Run",
+    "Python tests.Python tests in test_transaction_repository.py.executor": "Run",
+    "Python tests.Python tests in transaction_repository.py.executor": "Run",
+    "Python.__init__.executor": "Run",
+    "Python.account_repository.executor": "Run",
+    "Python.dependencies.executor": "Run",
+    "Python.dependency_injection.executor": "Run",
+    "Python.interest.executor": "Run",
+    "Python.interest_data_source.executor": "Run",
+    "Python.interest_repository.executor": "Run",
+    "Python.interest_repository_impl.executor": "Run",
+    "Python.interest_service.executor": "Run",
+    "Python.login.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.test_login.executor": "Run",
+    "Python.transaction_limits.executor": "Run",
+    "Python.transaction_repository.executor": "Run",
+    "Python.transaction_service.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/hp/Desktop/Group5_SWConstruction",
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -91,19 +97,72 @@
       <option name="project" value="LOCAL" />
       <updated>1744969285328</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="i have added the interest implementations and the data source">
+      <option name="closed" value="true" />
+      <created>1746281438222</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1746281438222</updated>
+    </task>
+    <task id="LOCAL-00003" summary="updated the interest service">
+      <option name="closed" value="true" />
+      <created>1746281471172</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1746281471172</updated>
+    </task>
+    <task id="LOCAL-00004" summary="i have added the dependency injection to help use a database or API for real-time rates and also helps in testing using the mock implementations">
+      <option name="closed" value="true" />
+      <created>1746281568832</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1746281568832</updated>
+    </task>
+    <task id="LOCAL-00005" summary="i have added the transaction.py file">
+      <option name="closed" value="true" />
+      <created>1746283010187</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1746283010187</updated>
+    </task>
+    <task id="LOCAL-00006" summary="updated">
+      <option name="closed" value="true" />
+      <created>1746283029304</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1746283029304</updated>
+    </task>
+    <task id="LOCAL-00007" summary="updated">
+      <option name="closed" value="true" />
+      <created>1746283041094</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1746283041094</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="documentation and uml diagrams" />
-    <option name="LAST_COMMIT_MESSAGE" value="documentation and uml diagrams" />
+    <MESSAGE value="i have added the interest implementations and the data source" />
+    <MESSAGE value="updated the interest service" />
+    <MESSAGE value="i have added the dependency injection to help use a database or API for real-time rates and also helps in testing using the mock implementations" />
+    <MESSAGE value="i have added the transaction.py file" />
+    <MESSAGE value="updated" />
+    <option name="LAST_COMMIT_MESSAGE" value="updated" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/application/repositories/transaction_repository.py</url>
-          <line>5</line>
+          <line>7</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
