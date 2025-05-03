@@ -24,5 +24,15 @@ class ITransactionRepository(ABC):
         """Retrieve all transactions."""
         pass
 
+    @abstractmethod
+    def get_usage(self, account_id: str) -> dict[str, float]:
+        """Retrieve daily and monthly transaction usage for the given account."""
+        pass
+
+    @abstractmethod
+    def reset_usage(self, account_id: str, period: str) -> None:
+        """Reset transaction usage for the specified period ('daily' or 'monthly')."""
+        pass
+
 
 
