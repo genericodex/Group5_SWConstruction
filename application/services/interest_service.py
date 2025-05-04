@@ -1,12 +1,9 @@
 from application.repositories.account_repository import IAccountRepository
-from domain.interest_repository import IInterestRepository
-
+from application.repositories.interest_repository import IInterestRepository
 from domain.savings_account import SavingsAccount
-from domain.interest import DynamicInterestStrategy
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 from typing import List, Optional
-
 
 class InterestService:
     def __init__(self,
@@ -52,22 +49,21 @@ class InterestService:
         try:
             account = self.account_repository.get_by_id(account_id)
 
-            # Default period if not provided
+            # Default period if not provided (previous month)
             if not start_date or not end_date:
-                # Define the period for interest calculation (e.g., previous month)
-                start_date = datetime(2025, 4, 1)  # April 1, 2025
-                end_date = datetime(2025, 4, 30)  # April 30, 2025
+                today = datetime.now()
+                # First day of the previous month
+                first_day_of_current_month = today.replace(day=1)
+                last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
+                start_date = last_day_of_previous_month.replace(day=1)
+                end_date = last_day_of_previous_month
 
             interest = 0.0
 
             if account:
-                if isinstance(account, SavingsAccount):
-                    # Get dynamic interest strategy with current rates
-                    account_type = account.get_account_type()
-                    # Create dynamic strategy with current rates from repository
-                    strategy = DynamicInterestStrategy(self.interest_repository, account_type)
-                    # Use the strategy to calculate interest
-                    interest = strategy.calculate_interest(account.get_balance(), start_date, end_date)
+                if account.interest_strategy:
+                    # Use the account's existing interest strategy to calculate interest
+                    interest = account.calculate_period_interest(start_date, end_date)
                     # Deposit the interest
                     account.deposit(interest)
                     # Save the updated account

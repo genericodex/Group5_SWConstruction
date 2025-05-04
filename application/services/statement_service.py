@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from application.services.statement_generator import IStatementGenerator
+from application.repositories.statement_generator import IStatementGenerator
 from domain.transactions import Transaction
 from domain.interest import SavingsInterestStrategy, CheckingInterestStrategy
 from application.repositories.transaction_repository import ITransactionRepository

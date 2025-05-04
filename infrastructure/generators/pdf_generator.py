@@ -1,6 +1,5 @@
 # infrastructure/generators/pdf_statement_generator.py
 from io import BytesIO
-from datetime import datetime
 from typing import Dict
 
 from reportlab.lib.pagesizes import letter
@@ -8,7 +7,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 
-from application.services.statement_generator import IStatementGenerator
+from application.repositories.statement_generator import IStatementGenerator
 
 
 class PDFStatementGenerator(IStatementGenerator):

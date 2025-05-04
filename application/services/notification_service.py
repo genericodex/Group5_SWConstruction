@@ -5,7 +5,7 @@ from domain.observers import transaction_logger, setup_logging
 
 import time
 
-from infrastructure.Notifications.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
+from infrastructure.notifications.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
 
 
 class NotificationService:

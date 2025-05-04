@@ -3,7 +3,7 @@ import csv
 from io import StringIO
 from typing import Dict
 
-from application.services.statement_generator import IStatementGenerator
+from application.repositories.statement_generator import IStatementGenerator
 
 
 class CSVStatementGenerator(IStatementGenerator):

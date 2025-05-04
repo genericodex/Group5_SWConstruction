@@ -1,6 +1,6 @@
-from domain.interest_repository import IInterestRepository
+from application.repositories.interest_repository import IInterestRepository
 from infrastructure.interest.interest_data_source import InterestDataSource
-from typing import Dict, Optional
+from typing import Dict
 
 
 class InterestRepositoryImpl(IInterestRepository):
