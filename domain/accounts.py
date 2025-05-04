@@ -183,9 +183,3 @@ class Account(ABC):
     def get_monthly_statements(self) -> List[MonthlyStatement]:
         return self._monthly_statements.copy()
 
-@router.get("/accounts")
-def get_accounts():
-    """
-    Endpoint to get a list of accounts (mock data for now).
-    """
-    return {"message": "List of accounts"}
