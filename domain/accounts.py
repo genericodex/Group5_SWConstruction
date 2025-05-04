@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Callable
 from domain.transactions import (
-    Transaction, 
+    Transaction,
     DepositTransactionType, WithdrawTransactionType, TransferTransactionType
 )
 from hashlib import sha256
@@ -19,15 +19,18 @@ class AccountStatus(ABC):
     def name(self) -> str:
         pass
 
+
 class ActiveStatus(AccountStatus):
     @property
     def name(self) -> str:
         return "ACTIVE"
 
+
 class ClosedStatus(AccountStatus):
     @property
     def name(self) -> str:
         return "CLOSED"
+
 
 class AccountType(ABC):
     @property
@@ -35,10 +38,12 @@ class AccountType(ABC):
     def name(self) -> str:
         pass
 
+
 class InterestStrategy(ABC):
     @abstractmethod
     def calculate_interest(self, balance: float, start_date: datetime, end_date: datetime) -> float:
         pass
+
 
 @dataclass
 class Account(ABC):
@@ -54,6 +59,10 @@ class Account(ABC):
     interest_strategy: InterestStrategy = None
     accrued_interest: float = 0.0
     _monthly_statements: List[MonthlyStatement] = field(default_factory=list, init=False)
+
+    def is_valid_deposit_amount(self, amount: float) -> bool:
+        """Check if the deposit amount is valid."""
+        return amount > 0
 
     def hash_password(self, password: str) -> None:
         """Hashes and sets the password for the account."""
@@ -111,13 +120,13 @@ class Account(ABC):
     def transfer(self, amount: float, destination_account: 'Account') -> Transaction:
         if amount <= 0:
             raise ValueError("Transfer amount must be positive")
-        
+
         if not self.can_withdraw(amount):
             raise ValueError("Insufficient funds for transfer")
-            
+
         self.update_balance(-amount)
         destination_account.update_balance(amount)
-        
+
         transaction = Transaction(
             transaction_type=TransferTransactionType(),
             amount=amount,
@@ -125,7 +134,7 @@ class Account(ABC):
             source_account_id=self.account_id,
             destination_account_id=destination_account.account_id
         )
-        
+
         self._transactions.append(transaction)
         destination_account._transactions.append(transaction)
         self.notify_observers(transaction)
@@ -135,7 +144,7 @@ class Account(ABC):
         self._observers.append(observer)
 
     def notify_observers(self, transaction: Transaction) -> None:
-        for observer in self._observers:
+        for observer in self._observers:  # Fix: Use self._observers
             observer(transaction)
 
     def get_transactions(self) -> List[Transaction]:
@@ -154,18 +163,26 @@ class Account(ABC):
     def generate_monthly_statement(self, start_date: datetime, end_date: datetime) -> MonthlyStatement:
         # Filter transactions for the period
         period_transactions = [
-            t for t in self._transactions 
+            t for t in self._transactions
             if start_date <= t.timestamp <= end_date
         ]
-        
-        # Calculate starting and ending balances
-        starting_balance = self._balance - sum(
-            t.amount for t in period_transactions
-        )
-        
+
+        # Calculate starting balance by adjusting for transaction effects
+        starting_balance = self._balance
+        for t in period_transactions:
+            if t.transaction_type.name == "DEPOSIT":
+                starting_balance -= t.amount  # Deposits increase balance, so subtract
+            elif t.transaction_type.name == "WITHDRAW":
+                starting_balance += t.amount  # Withdrawals decrease balance, so add
+            elif t.transaction_type.name == "TRANSFER":
+                if t.source_account_id == self.account_id:
+                    starting_balance += t.amount  # Transfer out decreases balance, so add
+                elif t.destination_account_id == self.account_id:
+                    starting_balance -= t.amount  # Transfer in increases balance, so subtract
+
         # Calculate interest for the period
         interest = self.calculate_period_interest(start_date, end_date)
-        
+
         statement = MonthlyStatement(
             account_id=self.account_id,
             statement_period=f"{start_date.strftime('%B %Y')}",
@@ -176,10 +193,9 @@ class Account(ABC):
             interest_earned=interest,
             transactions=period_transactions
         )
-        
+
         self._monthly_statements.append(statement)
         return statement
-    
+
     def get_monthly_statements(self) -> List[MonthlyStatement]:
         return self._monthly_statements.copy()
-
