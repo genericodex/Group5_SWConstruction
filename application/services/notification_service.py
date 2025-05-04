@@ -2,8 +2,11 @@ from typing import List, Callable, Dict, Optional
 from domain.transactions import Transaction
 from domain.accounts import Account
 from domain.observers import transaction_logger, setup_logging
-from infrastructure.notifications.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
+
 import time
+
+from infrastructure.Notifications.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
+
 
 class NotificationService:
     def __init__(self, email_adapter: Optional[EmailNotificationAdapter] = None,
