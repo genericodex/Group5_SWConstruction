@@ -1,5 +1,6 @@
 from application.repositories.account_repository import IAccountRepository
 from application.repositories.transaction_repository import ITransactionRepository
+from application.services.limit_enforcement_service import LimitEnforcementService
 from application.services.notification_service import NotificationService
 from domain.transactions import Transaction
 import time
@@ -9,11 +10,13 @@ class TransactionService:
                  transaction_repository: ITransactionRepository,
                  account_repository: IAccountRepository,
                  notification_service: NotificationService,
-                 logging_service):  # Add LoggingService dependency
+                 limit_enforcement_service: LimitEnforcementService,
+                 logging_service):
         self.transaction_repository = transaction_repository
         self.account_repository = account_repository
         self.notification_service = notification_service
-        self.logging_service = logging_service  # Initialize LoggingService
+        self.limit_enforcement_service = limit_enforcement_service
+        self.logging_service = logging_service
 
     def deposit(self, account_id: str, amount: float) -> Transaction:
         # Log the start of the service call
@@ -28,6 +31,10 @@ class TransactionService:
         )
 
         try:
+            # Check limit before processing
+            if not self.limit_enforcement_service.check_limit(account_id, amount):
+                raise ValueError(f"Deposit of {amount} exceeds limit constraints for account {account_id}")
+
             # Get account from repository
             account = self.account_repository.get_by_id(account_id)
             if not account:
@@ -90,6 +97,10 @@ class TransactionService:
         )
 
         try:
+            # Check limit before processing
+            if not self.limit_enforcement_service.check_limit(account_id, amount):
+                raise ValueError(f"Withdrawal of {amount} exceeds limit constraints for account {account_id}")
+
             # Get account from repository
             account = self.account_repository.get_by_id(account_id)
             if not account:
