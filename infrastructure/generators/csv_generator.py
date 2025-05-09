@@ -1,12 +1,14 @@
-# infrastructure/generators/csv_statement_generator.py
 import csv
 from io import StringIO
 from typing import Dict
 
-from application.repositories.statement_generator import IStatementGenerator
+from infrastructure.adapters.statement_adapter import IStatementGenerator
 
 
 class CSVStatementGenerator(IStatementGenerator):
+    def generate(self, statement_data: Dict) -> str:
+        return self.generate_csv(statement_data)
+
     def generate_csv(self, statement_data: Dict) -> str:
         output = StringIO()
         writer = csv.writer(output)

@@ -1,11 +1,3 @@
-"""
-Dependency injection configuration for the banking application.
-This file shows how to wire up the different layers following clean architecture.
-"""
-
-
-
-
 from application.services.logging_service import LoggingService
 from infrastructure.interest.interest_repository_impl import InterestRepositoryImpl
 from infrastructure.interest.interest_data_source import FileInterestDataSource, ApiInterestDataSource, \
