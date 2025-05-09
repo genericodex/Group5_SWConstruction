@@ -40,13 +40,17 @@ class FileInterestDataSource(InterestDataSource):
 
     def _read_data(self) -> Dict[str, float]:
         """Read data from the file"""
-        try:
-            with open(self.file_path, 'r') as file:
-                return json.load(file)
-        except (json.JSONDecodeError, FileNotFoundError):
-            # If file is corrupted or deleted, recreate it
-            self._ensure_file_exists()
-            return self._read_data()
+        for attempt in range(2):  # Try at most twice
+            try:
+                with open(self.file_path, 'r') as file:
+                    return json.load(file)
+            except FileNotFoundError:
+                self._ensure_file_exists()
+            except json.JSONDecodeError:
+                if os.path.exists(self.file_path):
+                    os.remove(self.file_path)
+                self._ensure_file_exists()
+        raise ValueError("Unable to read interest rate data after retry")
 
     def _write_data(self, data: Dict[str, float]) -> None:
         """Write data to the file"""
