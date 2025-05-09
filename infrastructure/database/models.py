@@ -7,14 +7,15 @@ class AccountModel(Base):
     __tablename__ = "accounts"
 
     account_id = Column(String, primary_key=True, index=True)
-    account_type = Column(String, nullable=False)  # Store the name property as string
+    account_type = Column(String, nullable=False)
     username = Column(String, nullable=False)
     password_hash = Column(String, nullable=False)
     balance = Column(Float, default=0.0)
-    status = Column(String, default="ACTIVE")  # Store the name property as string
+    status = Column(String, default="ACTIVE")
     creation_date = Column(DateTime, default=datetime.now)
 
     transactions = relationship("TransactionModel", back_populates="account")
+    constraints = relationship("AccountConstraintsModel", back_populates="account", uselist=False)
 
 class TransactionModel(Base):
     __tablename__ = "transactions"
@@ -29,3 +30,14 @@ class TransactionModel(Base):
     destination_account_id = Column(String, nullable=True)
 
     account = relationship("AccountModel", back_populates="transactions")
+
+class AccountConstraintsModel(Base):
+    __tablename__ = "account_constraints"
+
+    account_id = Column(String, ForeignKey("accounts.account_id"), primary_key=True)
+    daily_usage = Column(Float, default=0.0)
+    monthly_usage = Column(Float, default=0.0)
+    daily_limit = Column(Float, default=10000.0)
+    monthly_limit = Column(Float, default=50000.0)
+
+    account = relationship("AccountModel", back_populates="constraints")

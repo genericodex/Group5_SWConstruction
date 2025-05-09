@@ -1,4 +1,3 @@
-# infrastructure/generators/pdf_statement_generator.py
 from io import BytesIO
 from typing import Dict
 
@@ -7,11 +6,14 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 
-from application.repositories.statement_generator import IStatementGenerator
+from infrastructure.adapters.statement_adapter import IStatementGenerator
 
 
 class PDFStatementGenerator(IStatementGenerator):
-    def generate_pdf(self, statement_data: Dict) -> str:
+    def generate(self, statement_data: Dict) -> bytes:
+        return self.generate_pdf(statement_data)
+
+    def generate_pdf(self, statement_data: Dict) -> bytes:
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter)
         styles = getSampleStyleSheet()
@@ -37,7 +39,9 @@ class PDFStatementGenerator(IStatementGenerator):
 
         # Transactions
         transactions = [["Date", "Type", "Amount", "Description"]]
-        for t in statement_data["transactions"]:
+        # Sort transactions by timestamp in ascending order
+        sorted_transactions = sorted(statement_data["transactions"], key=lambda t: t["timestamp"])
+        for t in sorted_transactions:
             transactions.append([
                 t["timestamp"],
                 t["transaction_type"],
