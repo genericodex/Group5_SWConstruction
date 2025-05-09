@@ -5,7 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d0001e19-dad0-42a7-bac8-5ab8273e530f" name="Changes" comment="updated">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/database/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/database/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/generators/csv_generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/generators/csv_generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/generators/pdf_generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/generators/pdf_generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/interest/dependency_injection.py" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/interest/dependency_injection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/interest/interest_data_source.py" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/interest/interest_data_source.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/monthly_statement_builder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/notifications/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/notifications/notification_adapters.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/transactions/transaction.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +41,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/genericodex/Group5_SWConstruction.git&quot;,
-    &quot;accountId&quot;: &quot;d838a8ff-9f7e-4878-9e67-33d7844dde41&quot;
+    &quot;accountId&quot;: &quot;1a1b0e99-1eb2-42d8-bdae-3a94626576f7&quot;
   }
 }</component>
   <component name="ProjectColorInfo">{
@@ -84,7 +94,6 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.11" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/application/services" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -107,7 +116,6 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.11" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/application/services" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -126,7 +134,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-af26db0dccfe-c546a90a8094-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.26775.22" />
+        <option value="bundled-python-sdk-4f4e415b4190-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.26053.29" />
       </set>
     </attachedChunks>
   </component>
