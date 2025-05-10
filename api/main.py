@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api.v1.endpoints import accounts, notifications, logs
+from Group5_SWConstruction.api.v1.endpoints import finances, accounts, notifications, logs
 
 app = FastAPI(
     title="Banking System API",
@@ -11,6 +11,7 @@ app = FastAPI(
 app.include_router(accounts.router, prefix="/v1", tags=["accounts"])
 app.include_router(notifications.router, prefix="/v1", tags=["adapters"])
 app.include_router(logs.router, prefix="/v1", tags=["logs"])
+app.include_router(finances.router, prefix="/v1", tags=["finances"])
 
 # Health check endpoint
 @app.get("/health", tags=["health"])
