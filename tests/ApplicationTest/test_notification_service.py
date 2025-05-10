@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, Mock
 from application.services.notification_service import NotificationService
 from domain.accounts import Account
 from domain.transactions import Transaction, DepositTransactionType, WithdrawTransactionType, TransferTransactionType
-from infrastructure.notifications.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
+from infrastructure.adapters.notification_adapters import EmailNotificationAdapter, SMSNotificationAdapter
 
 
 class TestNotificationService(unittest.TestCase):

@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from infrastructure.notifications.notification_adapters import (
+from infrastructure.adapters.notification_adapters import (
     EmailNotificationAdapter,
     SMSNotificationAdapter,
     NotificationFactory,

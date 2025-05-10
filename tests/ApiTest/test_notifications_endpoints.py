@@ -84,20 +84,20 @@ def test_subscribe_to_notifications_email_success(
     mock_logging_service.info.return_value = None
 
     response = client.post(
-        "/api/v1/notifications/subscribe",
+        "/api/v1/adapters/subscribe",
         json={"accountId": account_id, "notifyType": "email", "contactInfo": email}
     )
 
     assert response.status_code == 200
     assert response.json() == {
         "status": "success",
-        "message": "Successfully subscribed to email notifications"
+        "message": "Successfully subscribed to email adapters"
     }
     assert account.email == email
     mock_notification_service.register_account_observers.assert_called_once_with(account, "standard")
     mock_account_repository.save.assert_called_once_with(account)
     mock_logging_service.info.assert_called_once_with(
-        f"Account {account_id} subscribed to email notifications",
+        f"Account {account_id} subscribed to email adapters",
         {"account_id": account_id, "notify_type": "email"}
     )
 
@@ -113,20 +113,20 @@ def test_subscribe_to_notifications_sms_success(
     mock_logging_service.info.return_value = None
 
     response = client.post(
-        "/api/v1/notifications/subscribe",
+        "/api/v1/adapters/subscribe",
         json={"accountId": account_id, "notifyType": "sms", "contactInfo": phone}
     )
 
     assert response.status_code == 200
     assert response.json() == {
         "status": "success",
-        "message": "Successfully subscribed to sms notifications"
+        "message": "Successfully subscribed to sms adapters"
     }
     assert account.phone == phone
     mock_notification_service.register_account_observers.assert_called_once_with(account, "premium")
     mock_account_repository.save.assert_called_once_with(account)
     mock_logging_service.info.assert_called_once_with(
-        f"Account {account_id} subscribed to sms notifications",
+        f"Account {account_id} subscribed to sms adapters",
         {"account_id": account_id, "notify_type": "sms"}
     )
 
@@ -135,7 +135,7 @@ def test_subscribe_to_notifications_account_not_found(client, mock_account_repos
     mock_account_repository.get_account_by_id.return_value = None
 
     response = client.post(
-        "/api/v1/notifications/subscribe",
+        "/api/v1/adapters/subscribe",
         json={"accountId": account_id, "notifyType": "email", "contactInfo": "user@example.com"}
     )
 
@@ -144,7 +144,7 @@ def test_subscribe_to_notifications_account_not_found(client, mock_account_repos
 
 def test_subscribe_to_notifications_invalid_type(client):
     response = client.post(
-        "/api/v1/notifications/subscribe",
+        "/api/v1/adapters/subscribe",
         json={"accountId": "acc123", "notifyType": "invalid_type", "contactInfo": "user@example.com"}
     )
 
@@ -161,14 +161,14 @@ def test_subscribe_to_notifications_exception(
     mock_logging_service.error.return_value = None
 
     response = client.post(
-        "/api/v1/notifications/subscribe",
+        "/api/v1/adapters/subscribe",
         json={"accountId": account_id, "notifyType": "email", "contactInfo": "user@example.com"}
     )
 
     assert response.status_code == 500
-    assert response.json() == {"detail": "Failed to subscribe to notifications: Service unavailable"}
+    assert response.json() == {"detail": "Failed to subscribe to adapters: Service unavailable"}
     mock_logging_service.error.assert_called_once_with(
-        "Failed to subscribe to notifications: Service unavailable",
+        "Failed to subscribe to adapters: Service unavailable",
         {"account_id": account_id, "notify_type": "email"}
     )
 
@@ -184,20 +184,20 @@ def test_unsubscribe_from_notifications_email_success(
     mock_logging_service.info.return_value = None
 
     response = client.post(
-        "/api/v1/notifications/unsubscribe",
+        "/api/v1/adapters/unsubscribe",
         json={"accountId": account_id, "notifyType": "email", "contactInfo": "user@example.com"}
     )
 
     assert response.status_code == 200
     assert response.json() == {
         "status": "success",
-        "message": "Successfully unsubscribed from email notifications"
+        "message": "Successfully unsubscribed from email adapters"
     }
     assert account.email is None
     mock_notification_service.register_account_observers.assert_called_once_with(account, "default")
     mock_account_repository.save.assert_called_once_with(account)
     mock_logging_service.info.assert_called_once_with(
-        f"Account {account_id} unsubscribed from email notifications",
+        f"Account {account_id} unsubscribed from email adapters",
         {"account_id": account_id, "notify_type": "email"}
     )
 
@@ -212,20 +212,20 @@ def test_unsubscribe_from_notifications_sms_success(
     mock_logging_service.info.return_value = None
 
     response = client.post(
-        "/api/v1/notifications/unsubscribe",
+        "/api/v1/adapters/unsubscribe",
         json={"accountId": account_id, "notifyType": "sms", "contactInfo": "+15551234567"}
     )
 
     assert response.status_code == 200
     assert response.json() == {
         "status": "success",
-        "message": "Successfully unsubscribed from sms notifications"
+        "message": "Successfully unsubscribed from sms adapters"
     }
     assert account.phone is None
     mock_notification_service.register_account_observers.assert_called_once_with(account, "default")
     mock_account_repository.save.assert_called_once_with(account)
     mock_logging_service.info.assert_called_once_with(
-        f"Account {account_id} unsubscribed from sms notifications",
+        f"Account {account_id} unsubscribed from sms adapters",
         {"account_id": account_id, "notify_type": "sms"}
     )
 
@@ -234,7 +234,7 @@ def test_unsubscribe_from_notifications_account_not_found(client, mock_account_r
     mock_account_repository.get_account_by_id.return_value = None
 
     response = client.post(
-        "/api/v1/notifications/unsubscribe",
+        "/api/v1/adapters/unsubscribe",
         json={"accountId": account_id, "notifyType": "email", "contactInfo": "user@example.com"}
     )
 
@@ -243,7 +243,7 @@ def test_unsubscribe_from_notifications_account_not_found(client, mock_account_r
 
 def test_unsubscribe_from_notifications_invalid_type(client):
     response = client.post(
-        "/api/v1/notifications/unsubscribe",
+        "/api/v1/adapters/unsubscribe",
         json={"accountId": "acc123", "notifyType": "invalid_type", "contactInfo": "user@example.com"}
     )
 
@@ -260,13 +260,13 @@ def test_unsubscribe_from_notifications_exception(
     mock_logging_service.error.return_value = None
 
     response = client.post(
-        "/api/v1/notifications/unsubscribe",
+        "/api/v1/adapters/unsubscribe",
         json={"accountId": account_id, "notifyType": "email", "contactInfo": "user@example.com"}
     )
 
     assert response.status_code == 500
-    assert response.json() == {"detail": "Failed to unsubscribe from notifications: Database error"}
+    assert response.json() == {"detail": "Failed to unsubscribe from adapters: Database error"}
     mock_logging_service.error.assert_called_once_with(
-        "Failed to unsubscribe from notifications: Database error",
+        "Failed to unsubscribe from adapters: Database error",
         {"account_id": account_id, "notify_type": "email"}
     )

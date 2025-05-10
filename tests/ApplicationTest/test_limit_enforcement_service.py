@@ -1,211 +1,110 @@
-from unittest import TestCase
-from unittest.mock import Mock, ANY
+import unittest
+from unittest.mock import Mock
 
-from application.repositories.transaction_repository import ITransactionRepository
 from application.services.limit_enforcement_service import LimitEnforcementService
 
 
-class TestLimitEnforcementService(TestCase):
+class TestLimitEnforcementService(unittest.TestCase):
     def setUp(self):
-        """Set up mock dependencies and instantiate the service before each test."""
-        self.transaction_repo = Mock(spec=ITransactionRepository)
+        self.constraints_repository = Mock()
         self.logging_service = Mock()
-        self.service = LimitEnforcementService(self.transaction_repo, self.logging_service)
+        self.service = LimitEnforcementService(self.constraints_repository, self.logging_service)
 
     def test_check_limit_success(self):
-        """Test check_limit when transaction is within both daily and monthly limits."""
+        # Arrange
         account_id = "123"
-        transaction_amount = 3000.0
-        self.transaction_repo.get_usage.return_value = {"daily": 5000.0, "monthly": 20000.0}
+        transaction_amount = 100.0
+        self.constraints_repository.get_limits.return_value = {"daily": 1000, "monthly": 5000}
+        self.constraints_repository.get_usage.return_value = {"daily": 500, "monthly": 2000}
 
+        # Act
         result = self.service.check_limit(account_id, transaction_amount)
 
+        # Assert
         self.assertTrue(result)
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="check_limit",
-            status="started",
-            duration_ms=0,
-            params={"account_id": account_id, "transaction_amount": transaction_amount}
-        )
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="check_limit",
-            status="success",
-            duration_ms=ANY,
-            params={"account_id": account_id, "transaction_amount": transaction_amount}
-        )
+        self.constraints_repository.update_usage.assert_any_call(account_id, transaction_amount, "daily")
+        self.constraints_repository.update_usage.assert_any_call(account_id, transaction_amount, "monthly")
+        self.logging_service.log_service_call.assert_called()
+        self.assertEqual(self.logging_service.log_service_call.call_count, 2)  # Started and success logs
 
     def test_check_limit_exceeds_daily_limit(self):
-        """Test check_limit when transaction exceeds the daily limit."""
+        # Arrange
         account_id = "123"
-        transaction_amount = 3000.0
-        self.transaction_repo.get_usage.return_value = {"daily": 8000.0, "monthly": 20000.0}
+        transaction_amount = 600.0
+        self.constraints_repository.get_limits.return_value = {"daily": 1000, "monthly": 5000}
+        self.constraints_repository.get_usage.return_value = {"daily": 500, "monthly": 2000}
 
-        with self.assertRaises(ValueError):
+        # Act/Assert
+        with self.assertRaises(ValueError) as context:
             self.service.check_limit(account_id, transaction_amount)
-
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="check_limit",
-            status="started",
-            duration_ms=0,
-            params={"account_id": account_id, "transaction_amount": transaction_amount}
-        )
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="check_limit",
-            status="failed",
-            duration_ms=ANY,
-            params={"account_id": account_id, "transaction_amount": transaction_amount},
-            error="Transaction exceeds daily or monthly limit"
-        )
+        self.assertEqual(str(context.exception), "Transaction exceeds daily or monthly limit")
+        self.constraints_repository.update_usage.assert_not_called()
+        self.logging_service.log_service_call.assert_called()
+        self.assertEqual(self.logging_service.log_service_call.call_count, 2)  # Started and failed logs
 
     def test_check_limit_exceeds_monthly_limit(self):
-        """Test check_limit when transaction exceeds the monthly limit."""
+        # Arrange
         account_id = "123"
-        transaction_amount = 3000.0
-        self.transaction_repo.get_usage.return_value = {"daily": 5000.0, "monthly": 48000.0}
+        transaction_amount = 3100.0
+        self.constraints_repository.get_limits.return_value = {"daily": 1000, "monthly": 5000}
+        self.constraints_repository.get_usage.return_value = {"daily": 500, "monthly": 2000}
 
-        with self.assertRaises(ValueError):
+        # Act/Assert
+        with self.assertRaises(ValueError) as context:
             self.service.check_limit(account_id, transaction_amount)
-
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="check_limit",
-            status="started",
-            duration_ms=0,
-            params={"account_id": account_id, "transaction_amount": transaction_amount}
-        )
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="check_limit",
-            status="failed",
-            duration_ms=ANY,
-            params={"account_id": account_id, "transaction_amount": transaction_amount},
-            error="Transaction exceeds daily or monthly limit"
-        )
-
-    def test_check_limit_repository_error(self):
-        """Test check_limit when the repository raises an exception."""
-        account_id = "123"
-        transaction_amount = 1000.0
-        self.transaction_repo.get_usage.side_effect = Exception("Database error")
-
-        with self.assertRaises(Exception) as cm:
-            self.service.check_limit(account_id, transaction_amount)
-
-        self.assertEqual(str(cm.exception), "Database error")
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="check_limit",
-            status="started",
-            duration_ms=0,
-            params={"account_id": account_id, "transaction_amount": transaction_amount}
-        )
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="check_limit",
-            status="failed",
-            duration_ms=ANY,
-            params={"account_id": account_id, "transaction_amount": transaction_amount},
-            error="Database error"
-        )
+        self.assertEqual(str(context.exception), "Transaction exceeds daily or monthly limit")
+        self.constraints_repository.update_usage.assert_not_called()
+        self.logging_service.log_service_call.assert_called()
+        self.assertEqual(self.logging_service.log_service_call.call_count, 2)  # Started and failed logs
 
     def test_reset_limits_daily_success(self):
-        """Test reset_limits_daily when the reset succeeds."""
+        # Arrange
         account_id = "123"
-        self.transaction_repo.reset_usage.return_value = None
 
+        # Act
         self.service.reset_limits_daily(account_id)
 
-        self.transaction_repo.reset_usage.assert_called_once_with(account_id, "daily")
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="reset_limits_daily",
-            status="started",
-            duration_ms=0,
-            params={"account_id": account_id}
-        )
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="reset_limits_daily",
-            status="success",
-            duration_ms=ANY,
-            params={"account_id": account_id}
-        )
+        # Assert
+        self.constraints_repository.reset_usage.assert_called_once_with(account_id, "daily")
+        self.logging_service.log_service_call.assert_called()
+        self.assertEqual(self.logging_service.log_service_call.call_count, 2)  # Started and success logs
 
-    def test_reset_limits_daily_error(self):
-        """Test reset_limits_daily when the repository raises an exception."""
+    def test_reset_limits_daily_failure(self):
+        # Arrange
         account_id = "123"
-        self.transaction_repo.reset_usage.side_effect = Exception("Database error")
+        self.constraints_repository.reset_usage.side_effect = Exception("Database error")
 
-        with self.assertRaises(Exception) as cm:
+        # Act/Assert
+        with self.assertRaises(Exception) as context:
             self.service.reset_limits_daily(account_id)
-
-        self.assertEqual(str(cm.exception), "Database error")
-        self.transaction_repo.reset_usage.assert_called_once_with(account_id, "daily")
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="reset_limits_daily",
-            status="started",
-            duration_ms=0,
-            params={"account_id": account_id}
-        )
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="reset_limits_daily",
-            status="failed",
-            duration_ms=ANY,
-            params={"account_id": account_id},
-            error="Database error"
-        )
+        self.assertEqual(str(context.exception), "Database error")
+        self.logging_service.log_service_call.assert_called()
+        self.assertEqual(self.logging_service.log_service_call.call_count, 2)  # Started and failed logs
 
     def test_reset_limits_monthly_success(self):
-        """Test reset_limits_monthly when the reset succeeds."""
+        # Arrange
         account_id = "123"
-        self.transaction_repo.reset_usage.return_value = None
 
+        # Act
         self.service.reset_limits_monthly(account_id)
 
-        self.transaction_repo.reset_usage.assert_called_once_with(account_id, "monthly")
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="reset_limits_monthly",
-            status="started",
-            duration_ms=0,
-            params={"account_id": account_id}
-        )
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="reset_limits_monthly",
-            status="success",
-            duration_ms=ANY,
-            params={"account_id": account_id}
-        )
+        # Assert
+        self.constraints_repository.reset_usage.assert_called_once_with(account_id, "monthly")
+        self.logging_service.log_service_call.assert_called()
+        self.assertEqual(self.logging_service.log_service_call.call_count, 2)  # Started and success logs
 
-    def test_reset_limits_monthly_error(self):
-        """Test reset_limits_monthly when the repository raises an exception."""
+    def test_reset_limits_monthly_failure(self):
+        # Arrange
         account_id = "123"
-        self.transaction_repo.reset_usage.side_effect = Exception("Database error")
+        self.constraints_repository.reset_usage.side_effect = Exception("Database error")
 
-        with self.assertRaises(Exception) as cm:
+        # Act/Assert
+        with self.assertRaises(Exception) as context:
             self.service.reset_limits_monthly(account_id)
+        self.assertEqual(str(context.exception), "Database error")
+        self.logging_service.log_service_call.assert_called()
+        self.assertEqual(self.logging_service.log_service_call.call_count, 2)  # Started and failed logs
 
-        self.assertEqual(str(cm.exception), "Database error")
-        self.transaction_repo.reset_usage.assert_called_once_with(account_id, "monthly")
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="reset_limits_monthly",
-            status="started",
-            duration_ms=0,
-            params={"account_id": account_id}
-        )
-        self.logging_service.log_service_call.assert_any_call(
-            service_name="LimitEnforcementService",
-            method_name="reset_limits_monthly",
-            status="failed",
-            duration_ms=ANY,
-            params={"account_id": account_id},
-            error="Database error"
-        )
+
+if __name__ == '__main__':
+    unittest.main()

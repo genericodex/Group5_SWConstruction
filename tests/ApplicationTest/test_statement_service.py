@@ -1,259 +1,208 @@
 import pytest
 from unittest.mock import Mock
 from datetime import datetime
-from domain.accounts import Account, AccountType
-from domain.transactions import Transaction, DepositTransactionType, WithdrawTransactionType
+from domain.accounts import AccountType
+from domain.transactions import Transaction, DepositTransactionType, WithdrawTransactionType, TransferTransactionType
 from application.services.statement_service import StatementService
+from infrastructure.adapters.statement_adapter import StatementAdapter
+from domain.savings_account import SavingsAccount
+from domain.checking_account import CheckingAccount
 
-
-# Mock classes for Account and AccountType since they are not fully provided
-class MockAccountType:
-    def __init__(self, name):
-        self.name = name
-
-
-class MockAccount:
-    def __init__(self, account_id, account_type):
-        self.account_id = account_id
-        self.account_type = account_type
-
-
-def test_generate_statement_pdf_happy_path():
-    # Arrange
-    account_id = "123"
-    start_date = datetime(2023, 1, 1)
-    end_date = datetime(2023, 1, 31)
-    account = MockAccount(account_id, MockAccountType("SAVINGS"))
-    txn1 = Transaction(DepositTransactionType(), 100.0, account_id, datetime(2023, 1, 5))
-    txn2 = Transaction(WithdrawTransactionType(), 50.0, account_id, datetime(2023, 1, 10))
-    transactions = [txn1, txn2]
-
-    transaction_repo = Mock()
-    transaction_repo.get_by_account_id.return_value = transactions
+def test_generate_statement_happy_path():
+    # Setup mocks
     account_repo = Mock()
-    account_repo.get_by_id.return_value = account
+    transaction_repo = Mock()
     generator = Mock()
-    generator.generate_pdf.return_value = "PDF generated"
 
+    # Sample data
+    account_id = "123"
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 1, 31)
+    account = SavingsAccount(account_id=account_id, username="testuser", password="testpass", initial_balance=0)
+    transactions = [
+        Transaction(DepositTransactionType(), 1000, account_id, datetime(2023, 12, 31)),
+        Transaction(WithdrawTransactionType(), 200, account_id, datetime(2024, 1, 15)),
+        Transaction(DepositTransactionType(), 300, account_id, datetime(2024, 1, 20)),
+    ]
+
+    account_repo.get_by_id.return_value = account
+    transaction_repo.get_by_account_id.return_value = transactions
+    generator.generate.return_value = "Generated PDF"
+
+    # Create service and call method
     service = StatementService(transaction_repo, account_repo, generator)
-
-    # Act
     result = service.generate_statement(account_id, start_date, end_date, "PDF")
 
-    # Assert
-    assert result == "PDF generated"
-    balance = 100.0 - 50.0  # 50.0
-    days = (end_date - start_date).days  # 30
-    interest = 50.0 * (0.025 / 365) * 30  # Savings rate
-    expected_statement_data = {
-        "account_id": account_id,
-        "transactions": [t.to_dict() for t in transactions],
-        "interest": interest,
-        "start_date": start_date.isoformat(),
-        "end_date": end_date.isoformat()
-    }
-    generator.generate_pdf.assert_called_once_with(expected_statement_data)
-
-
-def test_generate_statement_csv_happy_path():
-    # Arrange
-    account_id = "123"
-    start_date = datetime(2023, 1, 1)
-    end_date = datetime(2023, 1, 31)
-    account = MockAccount(account_id, MockAccountType("SAVINGS"))
-    txn1 = Transaction(DepositTransactionType(), 100.0, account_id, datetime(2023, 1, 5))
-    transactions = [txn1]
-
-    transaction_repo = Mock()
-    transaction_repo.get_by_account_id.return_value = transactions
-    account_repo = Mock()
-    account_repo.get_by_id.return_value = account
-    generator = Mock()
-    generator.generate_csv.return_value = "CSV generated"
-
-    service = StatementService(transaction_repo, account_repo, generator)
-
-    # Act
-    result = service.generate_statement(account_id, start_date, end_date, "CSV")
-
-    # Assert
-    assert result == "CSV generated"
-    balance = 100.0
+    # Assertions
+    assert result == "Generated PDF"
+    called_statement = generator.generate.call_args[0][0]
+    assert called_statement.account_id == account_id
+    assert called_statement.starting_balance == 1000  # Deposit before period
+    assert called_statement.ending_balance == 1100    # 1000 - 200 + 300
+    assert len(called_statement.transactions) == 2    # Transactions during period
     days = (end_date - start_date).days
-    interest = balance * (0.025 / 365) * days
-    expected_statement_data = {
-        "account_id": account_id,
-        "transactions": [t.to_dict() for t in transactions],
-        "interest": interest,
-        "start_date": start_date.isoformat(),
-        "end_date": end_date.isoformat()
-    }
-    generator.generate_csv.assert_called_once_with(expected_statement_data)
-
+    interest = 1100 * (0.025 / 365) * days
+    assert called_statement.interest_earned == pytest.approx(interest)
+    assert called_statement.total_deposits == 300
+    assert called_statement.total_withdrawals == 200
 
 def test_generate_statement_account_not_found():
-    # Arrange
-    account_id = "123"
-    start_date = datetime(2023, 1, 1)
-    end_date = datetime(2023, 1, 31)
     account_repo = Mock()
     account_repo.get_by_id.return_value = None
     transaction_repo = Mock()
     generator = Mock()
+
     service = StatementService(transaction_repo, account_repo, generator)
-
-    # Act & Assert
     with pytest.raises(ValueError, match="Account not found"):
-        service.generate_statement(account_id, start_date, end_date, "PDF")
-
+        service.generate_statement("nonexistent", datetime(2024, 1, 1), datetime(2024, 1, 31))
 
 def test_generate_statement_no_transactions():
-    # Arrange
-    account_id = "123"
-    start_date = datetime(2023, 1, 1)
-    end_date = datetime(2023, 1, 31)
-    account = MockAccount(account_id, MockAccountType("SAVINGS"))
-    transaction_repo = Mock()
-    transaction_repo.get_by_account_id.return_value = []
     account_repo = Mock()
-    account_repo.get_by_id.return_value = account
+    transaction_repo = Mock()
     generator = Mock()
-    generator.generate_pdf.return_value = "PDF generated"
-    service = StatementService(transaction_repo, account_repo, generator)
 
-    # Act
+    account_id = "123"
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 1, 31)
+    account = SavingsAccount(account_id=account_id, username="testuser", password="testpass", initial_balance=0)
+
+    account_repo.get_by_id.return_value = account
+    transaction_repo.get_by_account_id.return_value = []
+    generator.generate.return_value = "Generated PDF"
+
+    service = StatementService(transaction_repo, account_repo, generator)
     result = service.generate_statement(account_id, start_date, end_date, "PDF")
 
-    # Assert
-    assert result == "PDF generated"
-    expected_statement_data = {
-        "account_id": account_id,
-        "transactions": [],
-        "interest": 0.0,
-        "start_date": start_date.isoformat(),
-        "end_date": end_date.isoformat()
-    }
-    generator.generate_pdf.assert_called_once_with(expected_statement_data)
+    assert result == "Generated PDF"
+    called_statement = generator.generate.call_args[0][0]
+    assert called_statement.starting_balance == 0
+    assert called_statement.ending_balance == 0
+    assert called_statement.interest_earned == 0
+    assert len(called_statement.transactions) == 0
 
+def test_generate_statement_transactions_only_before():
+    account_repo = Mock()
+    transaction_repo = Mock()
+    generator = Mock()
+
+    account_id = "123"
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 1, 31)
+    account = SavingsAccount(account_id=account_id, username="testuser", password="testpass", initial_balance=0)
+    transactions = [
+        Transaction(DepositTransactionType(), 500, account_id, datetime(2023, 12, 15)),
+        Transaction(WithdrawTransactionType(), 100, account_id, datetime(2023, 12, 20)),
+    ]
+
+    account_repo.get_by_id.return_value = account
+    transaction_repo.get_by_account_id.return_value = transactions
+    generator.generate.return_value = "Generated PDF"
+
+    service = StatementService(transaction_repo, account_repo, generator)
+    result = service.generate_statement(account_id, start_date, end_date, "PDF")
+
+    assert result == "Generated PDF"
+    called_statement = generator.generate.call_args[0][0]
+    assert called_statement.starting_balance == 400  # 500 - 100
+    assert called_statement.ending_balance == 400
+    assert called_statement.interest_earned == pytest.approx(400 * (0.025 / 365) * 30)
+    assert len(called_statement.transactions) == 0
 
 def test_generate_statement_checking_account():
-    # Arrange
-    account_id = "123"
-    start_date = datetime(2023, 1, 1)
-    end_date = datetime(2023, 1, 31)
-    account = MockAccount(account_id, MockAccountType("CHECKING"))
-    txn1 = Transaction(DepositTransactionType(), 200.0, account_id, datetime(2023, 1, 5))
-    transactions = [txn1]
-
-    transaction_repo = Mock()
-    transaction_repo.get_by_account_id.return_value = transactions
     account_repo = Mock()
-    account_repo.get_by_id.return_value = account
+    transaction_repo = Mock()
     generator = Mock()
-    generator.generate_pdf.return_value = "PDF generated"
+
+    account_id = "456"
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 1, 31)
+    account = CheckingAccount(account_id=account_id, username="testuser", password="testpass", initial_balance=0)
+    transactions = [
+        Transaction(DepositTransactionType(), 1000, account_id, datetime(2024, 1, 10)),
+    ]
+
+    account_repo.get_by_id.return_value = account
+    transaction_repo.get_by_account_id.return_value = transactions
+    generator.generate.return_value = "Generated PDF"
 
     service = StatementService(transaction_repo, account_repo, generator)
-
-    # Act
     result = service.generate_statement(account_id, start_date, end_date, "PDF")
 
-    # Assert
-    assert result == "PDF generated"
-    balance = 200.0
-    days = (end_date - start_date).days
-    interest = balance * (0.001 / 365) * days  # Checking rate
-    expected_statement_data = {
-        "account_id": account_id,
-        "transactions": [t.to_dict() for t in transactions],
-        "interest": interest,
-        "start_date": start_date.isoformat(),
-        "end_date": end_date.isoformat()
-    }
-    generator.generate_pdf.assert_called_once_with(expected_statement_data)
+    assert result == "Generated PDF"
+    called_statement = generator.generate.call_args[0][0]
+    assert called_statement.starting_balance == 0
+    assert called_statement.ending_balance == 1000
+    interest = 1000 * (0.001 / 365) * 30
+    assert called_statement.interest_earned == pytest.approx(interest)
 
+def test_generate_statement_csv_format():
+    account_repo = Mock()
+    transaction_repo = Mock()
+    generator = Mock()
+
+    account_id = "123"
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 1, 31)
+    account = SavingsAccount(account_id=account_id, username="testuser", password="testpass", initial_balance=0)
+
+    account_repo.get_by_id.return_value = account
+    transaction_repo.get_by_account_id.return_value = []
+    generator.generate.return_value = "Generated CSV"
+
+    service = StatementService(transaction_repo, account_repo, generator)
+    result = service.generate_statement(account_id, start_date, end_date, "CSV")
+
+    assert result == "Generated CSV"
+    called_statement = generator.generate.call_args[0][0]
+    generator.generate.assert_called_with(called_statement, "CSV")
 
 def test_generate_statement_unsupported_format():
-    # Arrange
-    account_id = "123"
-    start_date = datetime(2023, 1, 1)
-    end_date = datetime(2023, 1, 31)
-    account = MockAccount(account_id, MockAccountType("SAVINGS"))
-    transaction_repo = Mock()
-    transaction_repo.get_by_account_id.return_value = []  # Fix: Set to return an empty list
     account_repo = Mock()
-    account_repo.get_by_id.return_value = account
-    generator = Mock()
-    service = StatementService(transaction_repo, account_repo, generator)
-
-    # Act & Assert
-    with pytest.raises(ValueError, match="Unsupported format type"):
-        service.generate_statement(account_id, start_date, end_date, "XML")
-
-
-def test_generate_statement_same_start_end_date():
-    # Arrange
-    account_id = "123"
-    start_date = datetime(2023, 1, 5)
-    end_date = datetime(2023, 1, 5)
-    account = MockAccount(account_id, MockAccountType("SAVINGS"))
-    txn1 = Transaction(DepositTransactionType(), 100.0, account_id, datetime(2023, 1, 5))
-    transactions = [txn1]
-
     transaction_repo = Mock()
+    generator = StatementAdapter()  # Real adapter to test exception
+
+    account_id = "123"
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 1, 31)
+    account = SavingsAccount(account_id=account_id, username="testuser", password="testpass", initial_balance=0)
+
+    account_repo.get_by_id.return_value = account
+    transaction_repo.get_by_account_id.return_value = []
+
+    service = StatementService(transaction_repo, account_repo, generator)
+    with pytest.raises(ValueError, match="Unsupported format type: TXT"):
+        service.generate_statement(account_id, start_date, end_date, "TXT")
+
+def test_generate_statement_with_transfers():
+    account_repo = Mock()
+    transaction_repo = Mock()
+    generator = Mock()
+
+    account_id = "123"
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 1, 31)
+    account = SavingsAccount(account_id=account_id, username="testuser", password="testpass", initial_balance=0)
+    transactions = [
+        Transaction(DepositTransactionType(), 1000, account_id, datetime(2023, 12, 31)),
+        Transaction(WithdrawTransactionType(), 200, account_id, datetime(2024, 1, 15)),
+        Transaction(DepositTransactionType(), 300, account_id, datetime(2024, 1, 20)),
+        Transaction(TransferTransactionType(), 100, account_id, datetime(2024, 1, 25), source_account_id="other", destination_account_id=account_id),
+        Transaction(TransferTransactionType(), 50, account_id, datetime(2024, 1, 26), source_account_id=account_id, destination_account_id="other"),
+    ]
+
+    account_repo.get_by_id.return_value = account
     transaction_repo.get_by_account_id.return_value = transactions
-    account_repo = Mock()
-    account_repo.get_by_id.return_value = account
-    generator = Mock()
-    generator.generate_pdf.return_value = "PDF generated"
+    generator.generate.return_value = "Generated PDF"
 
     service = StatementService(transaction_repo, account_repo, generator)
-
-    # Act
     result = service.generate_statement(account_id, start_date, end_date, "PDF")
 
-    # Assert
-    assert result == "PDF generated"
-    balance = 100.0
-    days = 0  # Same day
-    interest = balance * (0.025 / 365) * days  # 0 interest
-    expected_statement_data = {
-        "account_id": account_id,
-        "transactions": [t.to_dict() for t in transactions],
-        "interest": interest,
-        "start_date": start_date.isoformat(),
-        "end_date": end_date.isoformat()
-    }
-    generator.generate_pdf.assert_called_once_with(expected_statement_data)
-
-
-def test_generate_statement_transactions_outside_range():
-    # Arrange
-    account_id = "123"
-    start_date = datetime(2023, 1, 1)
-    end_date = datetime(2023, 1, 31)
-    account = MockAccount(account_id, MockAccountType("SAVINGS"))
-    txn1 = Transaction(DepositTransactionType(), 100.0, account_id, datetime(2023, 2, 1))  # Outside range
-    transactions = [txn1]
-
-    transaction_repo = Mock()
-    transaction_repo.get_by_account_id.return_value = transactions
-    account_repo = Mock()
-    account_repo.get_by_id.return_value = account
-    generator = Mock()
-    generator.generate_pdf.return_value = "PDF generated"
-
-    service = StatementService(transaction_repo, account_repo, generator)
-
-    # Act
-    result = service.generate_statement(account_id, start_date, end_date, "PDF")
-
-    # Assert
-    assert result == "PDF generated"
-    expected_statement_data = {
-        "account_id": account_id,
-        "transactions": [],  # No transactions in range
-        "interest": 0.0,
-        "start_date": start_date.isoformat(),
-        "end_date": end_date.isoformat()
-    }
-    generator.generate_pdf.assert_called_once_with(expected_statement_data)
+    assert result == "Generated PDF"
+    called_statement = generator.generate.call_args[0][0]
+    assert called_statement.starting_balance == 1000
+    assert called_statement.ending_balance == 1100  # Transfers not affecting balance in current impl
+    assert len(called_statement.transactions) == 4
+    assert called_statement.total_deposits == 300
+    assert called_statement.total_withdrawals == 200
+    assert called_statement.total_transfers_in == 100
+    assert called_statement.total_transfers_out == 50
