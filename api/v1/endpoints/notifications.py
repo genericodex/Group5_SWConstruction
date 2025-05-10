@@ -21,7 +21,7 @@ class NotificationSubscriptionRequest(BaseModel):
     contactInfo: str  # email address or phone number
 
 
-@router.post("/notifications/subscribe", status_code=200)
+@router.post("/adapters/subscribe", status_code=200)
 async def subscribe_to_notifications(
         request: NotificationSubscriptionRequest,
         notification_service: NotificationService = Depends(get_notification_service),
@@ -47,27 +47,27 @@ async def subscribe_to_notifications(
         else:  # SMS
             account.phone = request.contactInfo
 
-        # Register for notifications based on tier
+        # Register for adapters based on tier
         notification_service.register_account_observers(account, account_tier)
 
         # Update account in repository
         account_repo.save(account)
 
         logging_service.info(
-            f"Account {request.accountId} subscribed to {request.notifyType} notifications",
+            f"Account {request.accountId} subscribed to {request.notifyType} adapters",
             {"account_id": request.accountId, "notify_type": request.notifyType}
         )
 
-        return {"status": "success", "message": f"Successfully subscribed to {request.notifyType} notifications"}
+        return {"status": "success", "message": f"Successfully subscribed to {request.notifyType} adapters"}
     except Exception as e:
         logging_service.error(
-            f"Failed to subscribe to notifications: {str(e)}",
+            f"Failed to subscribe to adapters: {str(e)}",
             {"account_id": request.accountId, "notify_type": request.notifyType}
         )
-        raise HTTPException(status_code=500, detail=f"Failed to subscribe to notifications: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to subscribe to adapters: {str(e)}")
 
 
-@router.post("/notifications/unsubscribe", status_code=200)
+@router.post("/adapters/unsubscribe", status_code=200)
 async def unsubscribe_from_notifications(
         request: NotificationSubscriptionRequest,
         notification_service: NotificationService = Depends(get_notification_service),
@@ -89,21 +89,21 @@ async def unsubscribe_from_notifications(
         else:  # SMS
             account.phone = None
 
-        # Re-register with default tier (which has minimal notifications)
+        # Re-register with default tier (which has minimal adapters)
         notification_service.register_account_observers(account, "default")
 
         # Update account in repository
         account_repo.save(account)
 
         logging_service.info(
-            f"Account {request.accountId} unsubscribed from {request.notifyType} notifications",
+            f"Account {request.accountId} unsubscribed from {request.notifyType} adapters",
             {"account_id": request.accountId, "notify_type": request.notifyType}
         )
 
-        return {"status": "success", "message": f"Successfully unsubscribed from {request.notifyType} notifications"}
+        return {"status": "success", "message": f"Successfully unsubscribed from {request.notifyType} adapters"}
     except Exception as e:
         logging_service.error(
-            f"Failed to unsubscribe from notifications: {str(e)}",
+            f"Failed to unsubscribe from adapters: {str(e)}",
             {"account_id": request.accountId, "notify_type": request.notifyType}
         )
-        raise HTTPException(status_code=500, detail=f"Failed to unsubscribe from notifications: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to unsubscribe from adapters: {str(e)}")

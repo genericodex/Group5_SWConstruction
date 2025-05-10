@@ -3,13 +3,13 @@ from api.v1.endpoints import accounts, notifications, logs
 
 app = FastAPI(
     title="Banking System API",
-    description="API for banking operations including accounts, transactions, transfers, and notifications",
+    description="API for banking operations including accounts, transactions, transfers, and adapters",
     version="1.0.0"
 )
 
 # Include the API routes
 app.include_router(accounts.router, prefix="/v1", tags=["accounts"])
-app.include_router(notifications.router, prefix="/v1", tags=["notifications"])
+app.include_router(notifications.router, prefix="/v1", tags=["adapters"])
 app.include_router(logs.router, prefix="/v1", tags=["logs"])
 
 # Health check endpoint

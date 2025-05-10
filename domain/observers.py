@@ -16,7 +16,7 @@ def transaction_logger(transaction: Transaction) -> None:
 
 
 def email_notifier(transaction: Transaction) -> None:
-    """Observer that handles email notifications for transactions"""
+    """Observer that handles email adapters for transactions"""
     # This is a placeholder for actual email sending logic
     transaction_type = transaction.get_transaction_type().name
     amount = transaction.get_amount()
@@ -25,7 +25,7 @@ def email_notifier(transaction: Transaction) -> None:
     print(f"Email notification sent for {transaction_type} of ${amount} on account {account_id}")
 
 def sms_notifier(transaction: Transaction) -> None:
-    """Observer that handles SMS notifications for transactions"""
+    """Observer that handles SMS adapters for transactions"""
     # This is a placeholder for actual SMS sending logic
     transaction_type = transaction.get_transaction_type().name
     amount = transaction.get_amount()

@@ -11,7 +11,7 @@ from application.services.notification_service import NotificationService
 from application.services.logging_service import LoggingService
 from infrastructure.repositories.account_repository import AccountRepository
 from infrastructure.repositories.transaction_repository import TransactionRepository
-from infrastructure.notifications.notification_adapters import NotificationFactory
+from infrastructure.adapters.notification_adapters import NotificationFactory
 
 
 # Dependency to get the database session
@@ -36,7 +36,7 @@ def get_notification_service(logging_service: LoggingService = Depends(get_loggi
         "smtp_port": 587,
         "username": "banking@example.com",
         "password": "password",
-        "from_email": "notifications@banking.example.com"
+        "from_email": "adapters@banking.example.com"
     }
 
     sms_config = {
