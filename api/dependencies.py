@@ -1,17 +1,21 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from application.services.account_service import AccountCreationService
-from application.services.fund_transfer import FundTransferService
-from infrastructure.database.db import get_db
-
-from application.services.transaction_service import TransactionService
-
-from application.services.notification_service import NotificationService
-from application.services.logging_service import LoggingService
-from infrastructure.repositories.account_repository import AccountRepository
-from infrastructure.repositories.transaction_repository import TransactionRepository
-from infrastructure.adapters.notification_adapters import NotificationFactory
+from Group5_SWConstruction.application.repositories.accountConstraint_repository import IAccountConstraintsRepository
+from Group5_SWConstruction.application.services.account_service import AccountCreationService
+from Group5_SWConstruction.application.services.fund_transfer import FundTransferService
+from Group5_SWConstruction.application.services.interest_service import InterestService
+from Group5_SWConstruction.application.services.limit_enforcement_service import LimitEnforcementService
+from Group5_SWConstruction.application.services.logging_service import LoggingService
+from Group5_SWConstruction.application.services.notification_service import NotificationService
+from Group5_SWConstruction.application.services.statement_service import StatementService
+from Group5_SWConstruction.application.services.transaction_service import TransactionService
+from Group5_SWConstruction.infrastructure.adapters.notification_adapters import NotificationFactory
+from Group5_SWConstruction.infrastructure.adapters.statement_adapter import IStatementGenerator
+from Group5_SWConstruction.infrastructure.database.db import get_db
+from Group5_SWConstruction.infrastructure.repositories.account_repository import AccountRepository
+from Group5_SWConstruction.infrastructure.repositories.interest_repository import InterestRepository
+from Group5_SWConstruction.infrastructure.repositories.transaction_repository import TransactionRepository
 
 
 # Dependency to get the database session
@@ -112,3 +116,30 @@ def get_transaction_repository(
         logging_service: LoggingService = Depends(get_logging_service)
 ) -> TransactionRepository:
     return TransactionRepository(db, logging_service)
+
+# Dependency to get the InterestService
+def get_interest_service(
+    db: Session = Depends(get_db_session),
+    logging_service: LoggingService = Depends(get_logging_service)
+) -> InterestService:
+    account_repo = AccountRepository(db)
+    interest_repo = InterestRepository(None)
+    return InterestService(account_repo, interest_repo, logging_service)
+
+# Dependency to get the LimitEnforcementService
+def get_limit_enforcement_service(
+    db: Session = Depends(get_db_session),
+    logging_service: LoggingService = Depends(get_logging_service)
+) -> LimitEnforcementService:
+    constraints_repo = IAccountConstraintsRepository()
+    return LimitEnforcementService(constraints_repo, logging_service)
+
+# Dependency to get the StatementService
+def get_statement_service(
+    db: Session = Depends(get_db_session),
+    logging_service: LoggingService = Depends(get_logging_service)
+) -> StatementService:
+    account_repo = AccountRepository(db)
+    transaction_repo = TransactionRepository(db, logging_service)
+    generator = IStatementGenerator()
+    return StatementService(transaction_repo, account_repo, generator)
