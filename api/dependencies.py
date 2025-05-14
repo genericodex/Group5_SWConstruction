@@ -1,21 +1,22 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from Group5_SWConstruction.application.repositories.accountConstraint_repository import IAccountConstraintsRepository
-from Group5_SWConstruction.application.services.account_service import AccountCreationService
-from Group5_SWConstruction.application.services.fund_transfer import FundTransferService
-from Group5_SWConstruction.application.services.interest_service import InterestService
-from Group5_SWConstruction.application.services.limit_enforcement_service import LimitEnforcementService
-from Group5_SWConstruction.application.services.logging_service import LoggingService
-from Group5_SWConstruction.application.services.notification_service import NotificationService
-from Group5_SWConstruction.application.services.statement_service import StatementService
-from Group5_SWConstruction.application.services.transaction_service import TransactionService
-from Group5_SWConstruction.infrastructure.adapters.notification_adapters import NotificationFactory
-from Group5_SWConstruction.infrastructure.adapters.statement_adapter import IStatementGenerator
-from Group5_SWConstruction.infrastructure.database.db import get_db
-from Group5_SWConstruction.infrastructure.repositories.account_repository import AccountRepository
-from Group5_SWConstruction.infrastructure.repositories.interest_repository import InterestRepository
-from Group5_SWConstruction.infrastructure.repositories.transaction_repository import TransactionRepository
+from  application.repositories.accountConstraint_repository import IAccountConstraintsRepository
+from  application.services.account_service import AccountCreationService
+from  application.services.fund_transfer import FundTransferService
+from  application.services.interest_service import InterestService
+from  application.services.limit_enforcement_service import LimitEnforcementService
+from  application.services.logging_service import LoggingService
+from  application.services.notification_service import NotificationService
+from  application.services.statement_service import StatementService
+from  application.services.transaction_service import TransactionService
+from  infrastructure.adapters.notification_adapters import NotificationFactory
+from  infrastructure.adapters.statement_adapter import IStatementGenerator
+from  infrastructure.database.db import get_db
+from infrastructure.interest.interest_repository_impl import InterestRepository
+from  infrastructure.repositories.account_repository import AccountRepository
+
+from  infrastructure.repositories.transaction_repository import TransactionRepository
 
 
 # Dependency to get the database session

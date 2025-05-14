@@ -3,7 +3,7 @@ from infrastructure.interest.interest_data_source import InterestDataSource
 from typing import Dict
 
 
-class InterestRepositoryImpl(IInterestRepository):
+class InterestRepository(IInterestRepository):
     """Implementation of the interest repository interface from the domain layer"""
 
     def __init__(self, interest_data_source: InterestDataSource, logging_service=None):

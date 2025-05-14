@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from Group5_SWConstruction.api.v1.endpoints import finances, accounts, notifications, logs
+from api.v1.endpoints import finances, accounts, notifications, logs
 
 app = FastAPI(
     title="Banking System API",
