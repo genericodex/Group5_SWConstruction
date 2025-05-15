@@ -1,15 +1,15 @@
 import unittest
 from unittest.mock import Mock
 
-from infrastructure.interest.interest_repository_impl import InterestRepositoryImpl
+from infrastructure.interest.interest_repository_impl import InterestRepository
 
 
-class TestInterestRepositoryImpl(unittest.TestCase):
+class TestInterestRepository(unittest.TestCase):
     def setUp(self):
         # Create mocks for dependencies
         self.data_source = Mock()
         self.logging_service = Mock()
-        self.repository = InterestRepositoryImpl(self.data_source, self.logging_service)
+        self.repository = InterestRepository(self.data_source, self.logging_service)
 
     def test_get_interest_rate_from_data_source(self):
         # Test getting rate from data source
@@ -69,7 +69,7 @@ class TestInterestRepositoryImpl(unittest.TestCase):
 
     def test_no_logging_service(self):
         # Test behavior without logging service
-        repository = InterestRepositoryImpl(self.data_source, None)
+        repository = InterestRepository(self.data_source, None)
         self.data_source.get.return_value = 0.025
         rate = repository.get_interest_rate("savings")
         self.assertEqual(rate, 0.025)
